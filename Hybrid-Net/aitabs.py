@@ -22,7 +22,7 @@ class AITabTranscription(object):
         self.chord_cfg = self.config['chord']
         self.segment_cfg = self.config['segment']
         self.pitch_cfg = self.config['pitch']
-        self.spec_cfg = self.config['spec']
+        # self.spec_cfg = self.config['spec']
         self.tempo_cfg = self.config['tempo']
 
     def separate(self, waveform, sample_rate, device='cpu'):
