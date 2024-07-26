@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+
+
+    <h1>BEAT & LYRICS TEST</h1>
+    <input type="file" id="audioFile" accept=".mp3">
+    <input type="number" id="threshold" placeholder="Threshold (0-100)" min="0" max="100" value="70">
+
+    <button onclick="processAudio()">Process Audio</button>
+
+    <div id="beatContainer">
+        <div id="playhead" style="position: absolute; height: 100%; width: 2px; background-color: blue; left: 0px;">
+        </div>
+        <canvas id="waveformCanvas"></canvas>
+    </div>
+
+    <button onclick="playAudio()">Play </button>
+    <audio id="audioPlayer" controls hidden></audio>
+
+
+    <button id="lyricsButton">GetLyrics</button>
+    <div id="outputContainer"></div>
+
+
+
+
+
+{% endblock %}
