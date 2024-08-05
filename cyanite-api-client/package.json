@@ -1,0 +1,20 @@
+{
+  "name": "cyanite-api-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chart.js": "^3.5.1",
+    "chartjs-node-canvas": "^4.1.6",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "prompt-sync": "^4.2.0"
+  }
+}
