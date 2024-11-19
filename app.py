@@ -5,34 +5,37 @@ import librosa
 import numpy as np
 from flask import Flask, jsonify, request, render_template
 import replicate
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 app = Flask(__name__, template_folder='./templates', static_folder='./static')
 
-api_key = os.getenv("OPENAI_DISCO_API_KEY")
-client = OpenAI(api_key=api_key)
+# api_key = os.getenv("OPENAI_DISCO_API_KEY")
+# client = OpenAI(api_key=api_key)
 
 # api_token = os.getenv("MY_REPLICATE_TOKEN")
-# api_token = os.getenv("LAB_DISCO_API_KEY")
-api_token = ''
+api_token = os.getenv("LAB_DISCO_API_KEY")
+# api_token = ''
 print("API TOKEN?: ", api_token)
 api = replicate.Client(api_token=api_token)
 
 
 motion_magnitudes = {
-    "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 3, "vstrong": 6},
+    "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 3, "vstrong": 10},
     "zoom_out": {"none": 1.00, "weak": 0.98, "normal": 0.96, "strong": 0.4, "vstrong": 0.1},
-    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 6},
-    "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -6},
-    "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 6},
-    "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -6},
-    "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 6},
-    "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -6},
-    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 6},
-    "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -6},
-    "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 6},
-    "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -6},
-    "pan_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 6},
-    "pan_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -6}
+    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
+    "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
+    "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
+    "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
+    "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
+    "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
+    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
+    "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
+    "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
+    "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
+    "pan_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
+    "pan_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10}
 }
 
 # API Route
@@ -40,6 +43,10 @@ motion_magnitudes = {
 @app.route('/')
 def homepage():
     return render_template('waveform.html')
+
+@app.route('/quick_start')
+def quick_start():
+    return render_template('quick_start.html')
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
@@ -473,6 +480,32 @@ def generate_prompt_completion(client, prompt):
     )
     return completion.choices[0].message['content']
 
+UPLOAD_FOLDER = 'uploads/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload-image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image part in the request"}), 400
+
+    file = request.files['image']
+
+    if file.filename == '':
+        return jsonify({"error": "No selected image"}), 400
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+
+        return jsonify({"image_path": file_path}), 200
+    else:
+        return jsonify({"error": "Invalid file type"}), 400
+    
 def create_deforum_prompt(motion_data, final_anim_frames, motion_mode, prompts):
     # print("HERE ", ', '.join(motion_data['rotation_3d_y']))
     # print(motion_data['rotation_3d_y'][0:-1])
@@ -644,4 +677,6 @@ def process_data():
     return jsonify(response)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5004)
+    # app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

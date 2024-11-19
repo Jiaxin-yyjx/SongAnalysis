@@ -2,25 +2,45 @@
 
 {% block content %}
 
-<h1>BEAT & LYRICS TEST</h1>
-<input type="file" id="audioFile" accept=".mp3, .wav">
+<h1>AI ART & STORY</h1>
+<!-- <div class="suggestions-container">
+    <button id="suggestionsToggle" onclick="openQuickStart()" class="suggestions-button">
+        Click for Quick Start Guide
+    </button>
+</div> -->
+
+<div class="suggestions-container">
+    <a href="/quick_start" target="_blank" class="suggestions-button">
+        Click for Quick Start Guide
+    </a>
+</div>
+<!-- <input type="file" id="audioFile" accept=".mp3, .wav"> -->
 <!-- <input type="number" id="threshold" placeholder="Threshold (0-100)" min="0" max="100" value="70"> -->
 
-<button onclick="processAudio()">Process Audio</button>
 <!-- <button onclick="processAudioNormal()">Process Audio OG</button> -->
 <!-- <button onclick="playAudio()">Play</button> -->
 <!-- <button onclick="clearBeats()" id="clearButton">Clear Beats</button> -->
 <!-- <button onclick="showSignificantPoints()" id="findIdealIntervals">Find Ideal Intervals</button> -->
 <!-- <button id="deleteButton">Delete Selected Label</button> -->
-<button id="addNewInterval" onclick="addNewInterval()">Add Interval</button>
-<button onclick="delete_intervals()" id="deleteButton">Delete Intervals</button>
-<button id="add-transitions-button" onclick="addTransitionRegions()">Add Transitions</button>
-<button id="deleteTransitionButton" onclick="delete_transitions()">Delete Transition Mode</button>
-<button id="finalize-timestamps" onclick="makeTimestamp(false)">Finalize Time Stamps</button>
+
+</br>
+<div id="headers" style="display: flex; flex-wrap: wrap; gap: 10px;">
+    <input type="file" id="audioFile" accept=".m4a, .mp3, .wav">
+    <button id="addNewInterval" style="display: none;" onclick="addNewInterval()">Add Interval</button>
+    <button onclick="delete_intervals()" style="display: none;" id="deleteButton">Delete Intervals</button>
+    <button id="next-transition" style="display: none; background-color: rgb(230, 147, 147);"
+        onclick="show_transitions()">Next</button>
+    <button id="add-transitions-button" style="display: none;" onclick="addTransitionRegions()">Add Transition</button>
+    <button id="deleteTransitionButton" style="display: none;" onclick="delete_transitions()">Delete Transition</button>
+    <button id="defaultTransitionButton" style="display: none;" onclick="addDefaultTransitions()">Default
+        Transitions</button>
+    <!-- <button id="finalize-timestamps" style="display: none;" onclick="makeTimestamp(false)">Finalize Time Stamps</button> -->
+    <button id="finalize-timestamps" style="display: none;" onclick="show_default_boxes()">Finalize Time Stamps</button>
+</div>
 
 <div id="waveform"></div>
-<button id="playPauseButton">PLAY </button>
-<div>
+<button id="playPauseButton" style="display: none; size: 25px">▶</button>
+<div id="slider" style="display: none;">
     <label for="zoomSlider">Zoom Level:</label>
     <input type="range" id="zoomSlider" min="10" max="400" value="20">
 </div>
@@ -33,39 +53,126 @@
 
 <audio id="audioPlayer" controls hidden></audio> -->
 
-<button id="toggleMotionButton" onclick="toggleMotion()">3D Motion</button>
+<button id="toggleMotionButton" style="display: none;" onclick="toggleMotion()">3D Motion</button>
 
 <div id="outputContainer"></div>
 <div id="timestampsContainer"></div>
-<div class="suggestions-container">
-    <button id="suggestionsToggle" onclick="toggle_suggest()" class="suggestions-button">
-        Click for Suggestions
-    </button>
-    <div id="suggestionsContent" class="suggestions-content hidden">
-        <ul>
-            <li>Each segment is preferably around 5 seconds, with 1 second for transition.</li>
-            <li>If your segments are shorter than 3 seconds, it's suggested to delete the transition sections since transitions take up time, potentially overshadowing very short scenes.</li>
-            <li>Suggested ending: zoom (zoom in, zoom out).</li>
-            <li>Suggested transitions: pan (pan up, pan down, pan right, pan left).</li>
-            <li>You can use copy and paste to make all columns for the non-transition scenes the same, and all columns for the transition scenes if you want to get a quick try.</li>
-        </ul>
-    </div>
-</div>
 
-
-<div>
+<!-- <div id="vibeBox" style="display: none;" >
     <label for="vibeInput">Vibe: </label>
     <input type="text" id="vibeInput" placeholder="Enter vibe (e.g., calm)">
 </div>
-<div>
+<div id="colorBox" style="display: none;" >
     <label for="colorInput">Color:</label>
     <input type="text" id="colorInput" placeholder="Enter color (e.g., pale blue)">
 </div>
+<div id="imageryBox" style="display: none;">
+    <label for="imageryInput">Imagery:</label>
+    <input type="text" id="imageryInput"  placeholder="Enter imagery (e.g., calm flowing waves)">
+</div>
+
+<div id="textureBox" style="display: none;" >
+    <label for="textureInput">Texture:</label>
+    <input type="text" id="textureInput"placeholder="Enter texture of imagery (e.g., ink art on calligraphy paper)"> -->
+<!-- </div> -->
+
+<div id="detailsBox"
+    style="display: none; border: 1px solid #ddd; padding: 30px; width: 350px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1);">
+    <h3 style="margin-bottom: 10px;">Input Details</h3>
+
+    <!-- Vibe Input -->
+    <div id="vibeBox" style="margin-bottom: 10px; display: none;">
+        <label for="vibeInput">Vibe: </label>
+        <input type="text" id="vibeInput" placeholder="Enter vibe (e.g., calm)" list="vibeOptions">
+        <datalist id="vibeOptions">
+            <option value="calm">
+            <option value="epic">
+            <option value="aggressive">
+            <option value="chill">
+            <option value="dark">
+            <option value="energetic">
+            <option value="ethereal">
+            <option value="happy">
+            <option value="romantic">
+            <option value="sad">
+            <option value="scary">
+            <option value="sexy">
+            <option value="uplifting">
+        </datalist>
+    </div>
+    <hr>
+    <!-- Color Input -->
+    <div id="colorBox" style="margin-bottom: 10px; display: none;">
+        <label for="colorInput">Color:</label>
+        <input type="text" id="colorInput" placeholder="Enter color (e.g., sky blue)" list="colorOptions">
+        <br>
+        <button id="colorPickerButton">🎨</button>
+
+        <input type="color" id="colorPicker" style="display: none; align-items: center;">
+
+        <datalist id="colorOptions">
+            <option value="black/white">
+            <option value="myriad of color">
+            <option value="sky blue (#00BFFF)">
+            <option value="fiery red (#db0804)">
+            <option value="cherry blossom pink (#FFB7C5)">
+            <option value="amber (#FFBF00)">
+        </datalist>
+    </div>
+    <hr>
+    <!-- Imagery Input -->
+    <div id="imageryBox" style="margin-bottom: 10px; display: none;">
+        <label for="imageryInput">Imagery:</label>
+        <input type="text" id="imageryInput" placeholder="Enter imagery (e.g., flowing waves)" list="imageryOptions">
+        <br>
+        <a href="https://scientific-chili-aec.notion.site/13e34a2bba7580b0803ded971b20a0a7?pvs=4" target="_blank"
+            style="margin-left: 10px;">See imagery examples</a>
+        <datalist id="imageryOptions">
+            <option value="blossoming flower">
+            <option value="chaotic intertwining lines">
+            <option value="flowing waves">
+            <option value="starry night">
+            <option value="curvilinear intertwined circles">
+            <option value="whirling lines">
+            <option value="vibrant kaleidoscope of colors">
+            <option value="interstellar light trails">
+            <option value="abstract fractal patterns">
+            <option value="dissolving geometric shards">
+            <option value="diffused cosmic mists">
+            <option value="translucent ripple effects">
+        </datalist>
+    </div>
+    <hr>
+    <!-- Texture Input -->
+    <div id="textureBox" style="margin-bottom: 10px; display: none;">
+        <label for="textureInput">Texture:</label>
+        <input type="text" id="textureInput" placeholder="Enter texture (e.g., painting)" list="textureOptions">
+        <br>
+        <a href="https://scientific-chili-aec.notion.site/Texture-Samples-13e34a2bba7580489108f775af821dd0?pvs=4"
+            target="_blank" style="margin-left: 10px;">See texture examples</a>
+        <datalist id="textureOptions">
+            <option value="painting">
+            <option value="calligraphy brush ink stroke">
+            <option value="pastel watercolor on canvas">
+            <option value="charcoal drawing">
+            <option value="pencil drawing">
+            <option value="impasto palette knife painting">
+            <option value="mosaic">
+            <option value="jagged/irregular">
+            <option value="rubbed graphite on paper">
+            <option value="digital glitch">
+            <option value="splattered paint">
+            <option value="graffiti">
+            <option value="ink blots">
+        </datalist>
+    </div>
+</div>
+
 <!-- <button onclick="fillDefaults()">Fill with Defaults</button> -->
-<button id="fill-defaults" onclick="fillDefaults()">Fill With Defaults</button>
+<button id="fill-defaults" style="display: none;" onclick="fillDefaultsTemp()">Fill With Defaults</button>
 
 
-<div class="form-container" id="trash">Press Finalize Time Stamps</div>
+<div class="form-container" id="trash"></div>
 <!-- <button id="delete-section">Delete Sections</button> -->
 
 <!-- Dropdown Button -->
@@ -79,8 +186,16 @@
 
 <!-- Dropdown Container -->
 <!-- <div id="transitionsContainer"></div> -->
+</br>
 
-<button id="process-table" onclick="processTable()">Process Table</button>
+<!-- <h4>Select your initial Image</h4> -->
+<!-- <form id="uploadImage">
+    <input type="file" id="imageInput" name="image" accept="image/*" required>
+    <button type="submit">Upload</button>
+</form> -->
+<!-- <button id="submitSelectedImage">Submit Selected Image</button> -->
+
+<button id="process-table" style="display: none;" onclick="processTable()">Create Video</button>
 <div id="processing" style="display: none; color: red;">
     PROCESSING
 </div>
@@ -88,9 +203,48 @@
 <div id="processedDataContainer"></div>
 
 <!-- <script src="https://cdn.jsdelivr.net/npm/wavesurfer.js"></script> -->
- <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.4.0/wavesurfer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.4.0/wavesurfer.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.4.0/plugin/wavesurfer.regions.min.js"></script>
 
+<script>
+    $(document).ready(function () {
+        console.log("Document is ready!"); // Check if this logs to ensure jQuery is working
+
+        let selectedImagePath = null;
+
+        // Handle selection of predefined images
+        $('.selectable-image').on('click', function () {
+            console.log("Image clicked!"); // Confirm click event
+
+            // Remove the 'selected' class from any previously selected image
+            $('.selectable-image').removeClass('selected');
+
+            // Add the 'selected' class to the clicked image
+            $(this).addClass('selected');
+
+            // Store the path of the selected image
+            selectedImagePath = $(this).data('path');
+            console.log("Selected image path:", selectedImagePath); // Log selected path
+        });
+
+        // Handle the Submit button click
+        $('#submitSelectedImage').on('click', function () {
+            if (!selectedImagePath) {
+                alert("Please select an image before submitting.");
+                return;
+            }
+
+            // Remove the 'selected' class from all images to hide the border
+            $('.selectable-image').removeClass('selected');
+
+            // Clear the selected image path
+            selectedImagePath = null;
+
+            // Display success message
+            $('#predefinedImages').after("<p>Initial image selected successfully!</p>");
+        });
+    });
+</script>
 
 {% endblock %}
