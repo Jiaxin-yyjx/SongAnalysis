@@ -6,7 +6,10 @@ import numpy as np
 from flask import Flask, jsonify, request, render_template
 import replicate
 from dotenv import load_dotenv
-import os
+import math
+import subprocess
+import requests
+import re
 
 load_dotenv()
 app = Flask(__name__, template_folder='./templates', static_folder='./static')
@@ -22,20 +25,20 @@ api = replicate.Client(api_token=api_token)
 
 
 motion_magnitudes = {
-    "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 3, "vstrong": 10},
-    "zoom_out": {"none": 1.00, "weak": 0.98, "normal": 0.96, "strong": 0.4, "vstrong": 0.1},
-    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
-    "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
-    "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
-    "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
-    "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
-    "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
-    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
-    "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
-    "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
-    "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10},
-    "pan_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 10},
-    "pan_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -3, "vstrong": -10}
+    "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 10, "vstrong": 20},
+    "zoom_out": {"none": 1.00, "weak": -0.5, "normal": -1.04, "strong": -10, "vstrong": -20},
+    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 20},
+    "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+    "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+    "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+    "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+    "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+    "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+    "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+    "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+    "pan_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+    "pan_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20}
 }
 
 # API Route
@@ -354,6 +357,7 @@ def get_motion_and_speed(time, form_data):
             print(f"Invalid motion option '{motion}' for time {time}. Using default 'none'.")
             motion = 'none'
         if strength not in strength_options and not is_valid_strength_expression(strength):
+        # if strength not in strength_options:
             print(f"Invalid strength option '{strength}' for time {time}. Using default 'normal'.")
             strength = 'normal'
         motions.append({'motion': motion.strip(), 'strength': strength.strip(), 'speed': speed.strip()})
@@ -361,101 +365,80 @@ def get_motion_and_speed(time, form_data):
     return motions
 
 
+# def is_valid_strength_expression(expression):
+#     """
+#     Validates if a strength expression is a mathematical function like 10*sin(2*3.14*t/10).
+#     """
+#     try:
+#         # Replace `t` with 1 for validation, as it's a placeholder for time
+#         eval(expression.replace('t', '1'), {"sin": __import__('math').sin, "cos": __import__('math').cos})
+#         return True
+#     except Exception:
+#         return False
 def is_valid_strength_expression(expression):
     """
-    Validates if a strength expression is a mathematical function like 10*sin(2*3.14*t/10).
+    Validates if a strength expression is in the format:
+    [coefficient]*[sin|cos|tan](a*t/b)
+    Example: 10*sin(2*3.14*t/10)
     """
+    # Define the regex pattern
+    pattern = r"^\d*(\.\d+)?\s*[\*]?\s*(sin|cos|tan)\(\s*\d+(\.\d+)?\s*\*\s*t\s*/\s*\d+(\.\d+)?\s*\)$"
+
+    # Check if the expression matches the pattern
+    if not re.match(pattern, expression):
+        print("FAILED MATCH")
+        return False
+
+    # Attempt to evaluate the expression with t = 1
     try:
-        # Replace `t` with 1 for validation, as it's a placeholder for time
-        eval(expression.replace('t', '1'), {"sin": __import__('math').sin, "cos": __import__('math').cos})
+        eval(expression.replace('t', '1'), {"sin": math.sin, "cos": math.cos, "tan": math.tan})
         return True
     except Exception:
         return False
 
-def merge_intervals(interval_strings, motion_data):
-    merged_intervals = []
+# def merge_intervals(interval_strings, motion_data, scene_change_times):
+#     merged_intervals = []
     
-    # Loop through intervals
-    i = 0
-    while i < len(interval_strings) - 1:
-        current_interval = interval_strings[i]
-        next_interval = interval_strings[i + 1]
+#     # Loop through intervals
+#     i = 0
+#     while i < len(interval_strings) - 1:
+#         current_interval = interval_strings[i]
+#         next_interval = interval_strings[i + 1]
         
-        current_motions = motion_data[i]
-        next_motions = motion_data[i + 1]
+#         current_motions = motion_data[i]
+#         next_motions = motion_data[i + 1]
         
-        # Extract start and end times from the intervals
-        current_start_time, current_end_time = current_interval.split("-")
-        next_start_time, next_end_time = next_interval.split("-")
+#         # Extract start and end times from the intervals
+#         current_start_time, current_end_time = current_interval.split("-")
+#         next_start_time, next_end_time = next_interval.split("-")
         
-        # Compare the end time of the current interval and start time of the next
-        if current_end_time == next_start_time and current_motions == next_motions:
-            # Merge intervals and combine motion data
-            merged_interval = f"{current_start_time}-{next_end_time}"
-            merged_motions = current_motions  # Since both motions are the same, use one
+#         # Compare the end time of the current interval and start time of the next
+#         if current_end_time == next_start_time and current_motions == next_motions:
+#             # Merge intervals and combine motion data
+#             merged_interval = f"{current_start_time}-{next_end_time}"
+#             merged_motions = current_motions  # Since both motions are the same, use one
             
-            # Add the merged interval and motion data
-            merged_intervals.append((merged_interval, merged_motions))
+#             # Add the merged interval and motion data
+#             merged_intervals.append((merged_interval, merged_motions))
             
-            # Skip the next interval, as it's already merged
-            i += 2
-        else:
-            # Add the current interval and motion data as is
-            merged_intervals.append((current_interval, current_motions))
-            i += 1
+#             # Skip the next interval, as it's already merged
+#             i += 2
+#         else:
+#             # Add the current interval and motion data as is
+#             merged_intervals.append((current_interval, current_motions))
+#             i += 1
     
-    # Handle the last interval if it wasn't merged
-    if i < len(interval_strings):
-        merged_intervals.append((interval_strings[i], motion_data[i]))
+#     # Handle the last interval if it wasn't merged
+#     if i < len(interval_strings):
+#         merged_intervals.append((interval_strings[i], motion_data[i]))
     
-    return merged_intervals
-# def parse_input_data(form_data, trans_data, song_duration):
-#     trans_data = {k: v for k, v in trans_data.items() if v.get('transition', True)}
-#     scene_change_times = sorted(list(map(float,form_data.keys())))
-#     # print(scene_change_times)
+#     return merged_intervals
 
-#     # print(trans_data.keys())
-#     transition_times = list(map(float, [time.split('-')[0] for time in trans_data.keys()] + [time.split('-')[1] for time in trans_data.keys()] + list(form_data.keys())))
-#     # print(transition_times)
-#     time_intervals = sorted(set(scene_change_times + transition_times))
-#     time_intervals = [0] + [float(i) for i in time_intervals] + [float(round(song_duration, 2))]
-#     time_intervals = set(time_intervals)
-#     time_intervals = list(sorted(time_intervals))
-#     # print("HERE TIME: ", time_intervals)
-#     interval_strings = [f"{time_intervals[i]}-{time_intervals[i+1]}" for i in range(len(time_intervals) - 1)]
-#     motion_data = get_motion_data(form_data, trans_data, time_intervals)
-#     # interval_strings = [f"{time_intervals[i]}-{time_intervals[i+1]}" for i in range(len(time_intervals) - 1)]
-
-#     for interval, motions in zip(interval_strings, motion_data):
-#         print(f"Interval: {interval}, Motions: {motions}")
-
-#     merged_intervals = merge_intervals(interval_strings, motion_data)
-
-    
-#     # Output the merged intervals
-#     for interval, motions in merged_intervals:
-#         print(f"MERGED Interval: {interval}, Motions: {motions}")
-
-#     print("merged: ", merged_intervals)
-
-#     # print("TIME INTERVAL", time_intervals)
-
-#     for key, value in form_data.items():
-#         time_intervals.append(float(key))
-    
-#     for key in trans_data.keys():
-#         start, end = map(float, key.split('-'))
-#         time_intervals.extend([start, end])
-    
-#     time_intervals = sorted(set(time_intervals))
-#     time_intervals = [str(i) for i in time_intervals]
-#     # print(time_intervals)
-    
-#     return song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data
 
 def parse_input_data(form_data, trans_data, song_duration):
     trans_data = {k: v for k, v in trans_data.items() if v.get('transition', True)}
     scene_change_times = sorted(list(map(float, form_data.keys())))
+    print("scene times and trans", scene_change_times, trans_data)
     
     # Create the combined list of transition times
     transition_times = list(map(float, [time.split('-')[0] for time in trans_data.keys()] + 
@@ -471,23 +454,23 @@ def parse_input_data(form_data, trans_data, song_duration):
     
     # Get the motion data
     motion_data = get_motion_data(form_data, trans_data, time_intervals)
-    
+    og_motion_data = motion_data
     # Print the intervals and motions before merging
     for interval, motions in zip(interval_strings, motion_data):
         print(f"Interval: {interval}, Motions: {motions}")
 
     # Merge intervals with identical motion data
-    merged_intervals = merge_intervals(interval_strings, motion_data)
+    # merged_intervals = merge_intervals(interval_strings, motion_data, scene_change_times)
 
-    # Print the merged intervals
-    for interval, motions in merged_intervals:
-        print(f"MERGED Interval: {interval}, Motions: {motions}")
+    # # Print the merged intervals
+    # for interval, motions in merged_intervals:
+    #     print(f"MERGED Interval: {interval}, Motions: {motions}")
 
-    print("merged: ", merged_intervals)
+    # print("merged: ", merged_intervals)
 
     # Replace the old interval_strings and motion_data with the merged values
-    interval_strings = [interval for interval, motions in merged_intervals]
-    motion_data = [motions for interval, motions in merged_intervals]
+    # interval_strings = [interval for interval, motions in merged_intervals]
+    # motion_data = [motions for interval, motions in merged_intervals]
 
     # Add time intervals from form_data and trans_data
     for key, value in form_data.items():
@@ -501,7 +484,7 @@ def parse_input_data(form_data, trans_data, song_duration):
     time_intervals = [str(i) for i in time_intervals]
     
     # Return the updated values
-    return song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data
+    return song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data, og_motion_data
 
 
 # def calculate_frames(scene_change_times, time_intervals, motion_data, total_song_len, final_anim_frames):
@@ -599,6 +582,7 @@ def calculate_frames(scene_change_times, time_intervals, motion_data, total_song
 
     current_frame = 0
     animation_prompts = []
+    adjustments = []
 
     for interval, motions in zip(time_intervals, motion_data):
         start_time, end_time = map(float, interval.split('-'))
@@ -612,8 +596,16 @@ def calculate_frames(scene_change_times, time_intervals, motion_data, total_song
 
         # Calculate duration for the interval
         duration = (end_time - start_time) * frame_rate
-        adjusted_duration = round(duration * speed_multiplier['normal'])
+        adjusted_duration = math.ceil(duration * speed_multiplier['normal'])
         end_frame = current_frame + adjusted_duration
+        speed_factor = duration / adjusted_duration
+        adjustments.append({
+            "start_frame": current_frame,
+            "end_frame": end_frame,
+            "speed_factor": speed_factor,
+            "start_time": start_time,
+            "end_time": end_time
+        })
 
         # Process all motions for this interval
         for motion_entry in motions:
@@ -666,8 +658,58 @@ def calculate_frames(scene_change_times, time_intervals, motion_data, total_song
         if str(end_time) == str(total_song_len) and end_frame not in final_anim_frames and (end_frame - 1) not in final_anim_frames:
             final_anim_frames.append(end_frame)
 
-    return frame_data, animation_prompts
+    return frame_data, animation_prompts, adjustments
 
+
+# def build_transition_strings(frame_data):
+#     motion_defaults = {
+#         "zoom": 1.0,
+#         "translation_x": 0,
+#         "translation_y": 0,
+#         "angle": 0,
+#         "rotation_3d_x": 0,
+#         "rotation_3d_y": 0,
+#         "rotation_3d_z": 0
+#     }
+#     motion_strings = {motion: [] for motion in frame_data}
+#     print("FRAME DATA: ", frame_data)
+
+#     for motion, frames in frame_data.items():
+#         previous_end_frame = None
+#         for (start_frame, end_frame, duration, value) in frames:
+#             print("START: ", start_frame)
+#             print("END: ", end_frame)
+#             print("VALUE: ", value)
+#             pre_frame = start_frame - 1
+#             post_frame = end_frame + 1
+#             #Checks if the current motion immediately follows the previous motion 
+#             # (i.e., the end frame of the previous motion is the same as the start 
+#             # frame of the current motion). If so, it increments the start_frame by 
+#             # 2 to avoid overlapping frames.
+#             if previous_end_frame is not None and previous_end_frame == start_frame:
+#                 start_frame = start_frame + 2
+#             else:
+#                 #If the current motion doesn’t immediately follow the previous one, it 
+#                 # adds a motion entry for the pre_frame with the default motion value.
+#                 if pre_frame >= 0:
+#                     motion_strings[motion].append(f"{pre_frame}:({motion_defaults[motion]})")
+                    
+#             motion_strings[motion].append(f"{start_frame}:({value})")
+#             motion_strings[motion].append(f"{end_frame}:({value})")
+#             #start and end frame have same motion
+#             if post_frame >= 0:
+#                 #adds a motion entry for post_frame with the default motion value
+#                 motion_strings[motion].append(f"{post_frame}:({motion_defaults[motion]})")
+                
+#             previous_end_frame = end_frame
+
+#     for motion in motion_strings:
+#         if not any(s.startswith('0:') for s in motion_strings[motion]):
+#             motion_strings[motion].insert(0, f"0:({motion_defaults[motion]})")
+
+#     print("motion strings: ", motion_strings)
+
+#     return motion_strings
 
 def build_transition_strings(frame_data):
     motion_defaults = {
@@ -680,27 +722,45 @@ def build_transition_strings(frame_data):
         "rotation_3d_z": 0
     }
     motion_strings = {motion: [] for motion in frame_data}
+    print("FRAME DATA: ", frame_data)
 
     for motion, frames in frame_data.items():
         previous_end_frame = None
-        for (start_frame, end_frame, duration, value) in frames:
-            # print("START: ", start_frame)
-            # print("END: ", end_frame)
-            # print("VALUE: ", value)
+        for idx, (start_frame, end_frame, duration, value) in enumerate(frames):
+            
             pre_frame = start_frame - 1
             post_frame = end_frame + 1
-
+            #Checks if the current motion immediately follows the previous motion 
+            # (i.e., the end frame of the previous motion is the same as the start 
+            # frame of the current motion). If so, it increments the start_frame by 
+            # 2 to avoid overlapping frames.
             if previous_end_frame is not None and previous_end_frame == start_frame:
                 start_frame = start_frame + 2
             else:
+                #If the current motion doesn’t immediately follow the previous one, it 
+                # adds a motion entry for the pre_frame with the default motion value.
                 if pre_frame >= 0:
+                    print(f"pre-frame {pre_frame}:({motion_defaults[motion]})")
                     motion_strings[motion].append(f"{pre_frame}:({motion_defaults[motion]})")
                     
             motion_strings[motion].append(f"{start_frame}:({value})")
             motion_strings[motion].append(f"{end_frame}:({value})")
-            
-            if post_frame >= 0:
+            #start and end frame have same motion
+            try:
+                #if next seq of same motion type exists, check if start val matches current seq end frame
+                # if exists and is true, append the same value to post frame
+                next_start, next_end, _, next_value = frames[idx+1]
+                if next_start == end_frame:
+                    motion_strings[motion].append(f"{post_frame}:({value})")
+                else:
+                    # Reset value to default to indicate changing motion
+                    motion_strings[motion].append(f"{post_frame}:({motion_defaults[motion]})")
+            except:
                 motion_strings[motion].append(f"{post_frame}:({motion_defaults[motion]})")
+            # if post_frame >= 0:
+            #     print(f"post-frame {post_frame}:({motion_defaults[motion]})")
+            #     #adds a motion entry for post_frame with the default motion value
+            #     motion_strings[motion].append(f"{post_frame}:({motion_defaults[motion]})")
                 
             previous_end_frame = end_frame
 
@@ -709,6 +769,7 @@ def build_transition_strings(frame_data):
             motion_strings[motion].insert(0, f"0:({motion_defaults[motion]})")
 
     print("motion strings: ", motion_strings)
+
     return motion_strings
 
 def create_prompt(data):
@@ -737,14 +798,12 @@ def generate_image_prompts(form_data, final_anim_frames):
         "romantic": "loving and tender energy, evoking a sense of affection and intimacy",
         "uplifting": "encouraging and inspiring energy, evoking a sense of hope and motivation",
         "starry night": "starry night sky with delicate splotches resembling stars",
-        "curvilinear intertwined circles": "intricate abstract recursive line art in watercolor texture",
+        "curvilinear intertwined circles": "intricate abstract recursive line art",
         "flowing waves": "flowing waves, merging and separating gracefully",
         "blossoming flower": "delicate flower petals dancing in the wind, spiraling and intertwining gracefully",
-        "chaotic intertwining lines": "dynamic abstract gradient line art with jagged edges, evoking a sense of chaos and dissonance",
+        "chaotic intertwining lines": "dynamic abstract line art with intersecting, intertwined, jagged edges, evoking a sense of chaos and dissonance",
         "painting": "beautiful, 4k",
-        "renaissance": "in a modern and forward-thinking style",
         "black/white": "Black and white",
-        "pale blue": "Pale blue",
         "full color": "Vibrant, full color"
     }
     # print("GENERATE PROMPTS")
@@ -764,7 +823,8 @@ def generate_image_prompts(form_data, final_anim_frames):
     # print("ALL PROMPTS")
     # print(prompts)
 
-    
+    # print("final anim frames: ",final_anim_frames)
+    # print("prompts: ",prompts)
     combined_prompts = " | ".join([f"{final_anim_frames[i]}: {prompts[i]}" for i in range(len(prompts))])
     # print("combo: ", combined_prompts)
     # combined_prompts += " | ".join([f"{final_anim_frames[i]}"])
@@ -876,9 +936,93 @@ def create_deforum_prompt(motion_data, final_anim_frames, motion_mode, prompts,s
 
     return input
 
+def process_video_with_speed_adjustments(api_url, adjustments, song_name):
+    # Step 1: Download the video from the API URL
+    video_file = "downloaded_video.mp4"
+    download_video(api_url, video_file)
+    output_dir = "final_outputs"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_file = f"./{output_dir}/" + song_name.replace(' ','_').split('.')[0] + "_output.mp4"
+    
+    # Step 2: Adjust the playback speed of intervals
+    adjust_video_speed(video_file, adjustments, output_file)
+    
+    # Step 3: (Optional) Upload the corrected video to a storage service or return its path
+    return output_file
+
+def download_video(api_url, save_path):
+    """Download video from a given URL."""
+    response = requests.get(api_url, stream=True)
+    if response.status_code == 200:
+        with open(save_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+    else:
+        raise Exception(f"Failed to download video: {response.status_code}")
+
+def adjust_video_speed(input_video, adjustments, output_video):
+    """Apply playback speed adjustments to the video."""
+    segments = []
+    # subprocess.run([
+    #     "ffmpeg", "-i", input_video, "-vf", "select='between(n,120,190)'", "-vsync", "vfr", "-c:v", "libx264", "precise_segment.mp4"
+
+    # ])
+    print(adjustments)
+    for i, adj in enumerate(adjustments):
+        start_frame = adj["start_frame"]
+        end_frame = adj["end_frame"]
+        speed_factor_og = adj["speed_factor"]
+
+        # Calculate start and end times
+        start_time = start_frame / 15  # Assuming 15 fps
+        end_time = end_frame / 15
+        speed_factor = (end_time-start_time)/(adj["end_time"]-adj["start_time"])
+        print("speed_factor: ", speed_factor, speed_factor_og)
+        end_time = round(end_time,2)
+        start_time = round(start_time,2)
+        print("start time: ", start_time, " end time: ", end_time)
+        print("u start time: ", start_time/speed_factor, " u end time: ", end_time/speed_factor)
+        print("real start: ", adj["start_time"], " real final: ", adj["end_time"])
+        print("-------------------------")
+        # start_time = adj["start_time"]
+        # end_time = adj["end_time"]
+
+        # Extract segment
+        segment_file = f"segment_{i}.mp4"
+        subprocess.run([
+            "ffmpeg", "-i", input_video, 
+            "-vf", f"select='between(n,{start_frame},{end_frame})'", 
+            "-vsync", "vfr", 
+            "-c:v", "libx264", 
+            segment_file
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # Adjust playback speed
+        adjusted_segment = f"adjusted_segment_{i}.mp4"
+        subprocess.run([
+            "ffmpeg", "-i", segment_file, 
+            "-r", str(15), 
+            "-filter:v", f"setpts=PTS/{speed_factor}", 
+            "-filter:a", f"atempo={speed_factor}", 
+            adjusted_segment
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        segments.append(adjusted_segment)
+
+    # Merge all segments
+    with open("file_list.txt", "w") as f:
+        for segment in segments:
+            f.write(f"file '{segment}'\n")
+    subprocess.run([
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", "file_list.txt", "-c", "copy", output_video
+    ],stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Cleanup temporary files
+    for segment in segments + [f"segment_{i}.mp4" for i in range(len(adjustments))]:
+        os.remove(segment)
+    os.remove("file_list.txt")
+
 @app.route('/process-data', methods=['POST'])
 def process_data():
-    print("PROCESS DATA")
     data = request.json
     timestamps_scenes = data['timestamps_scenes']
     form_data = data['form_data']
@@ -886,7 +1030,7 @@ def process_data():
     song_len = data['song_len']
     motion_mode = data['motion_mode']
     seed = data['seed']
-    print("seed: " + str(seed))
+    song_name = data['song_name']
 
     # Here you can integrate your Python logic with the received data
     # Example: processed_data = your_function(timestamps_scenes, form_data, transitions_data)
@@ -896,13 +1040,15 @@ def process_data():
     # print("TRANS: ")
     # print(transitions_data)
 
-    song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data = parse_input_data(form_data, transitions_data, song_len)
+    song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data, og_motion_data = parse_input_data(form_data, transitions_data, song_len)
     final_anim_frames = []
     final_anim_frames.append(0)
     if round(song_len,2) not in scene_change_times:
         scene_change_times.append(round(song_len,2))
     # Calculate frames and generate prompts
-    frame_data, animation_prompts = calculate_frames(scene_change_times, interval_strings, motion_data, song_duration, final_anim_frames)
+    frame_data, animation_prompts, adjustments = calculate_frames(scene_change_times, interval_strings, motion_data, song_duration, final_anim_frames)
+    # og_frame_data, _, _ = calculate_frames(scene_change_times, interval_strings, og_motion_data, song_duration, final_anim_frames)
+    # print("OG FRAME DATA", og_frame_data, frame_data)
     motion_strings = build_transition_strings(frame_data)
     
 
@@ -910,13 +1056,10 @@ def process_data():
     # print(frame_data)
     # print("ANIM")
     # print(animation_prompts)
-
-    motion_strings = build_transition_strings(frame_data)
-
     # Print the final list of frame transitions for each motion type
-    print("\nFinal List of Frame Transitions for Each Motion Type:")
-    for motion, transitions in motion_strings.items():
-        print(f"{motion}: {', '.join(transitions)}")
+    # print("\nFinal List of Frame Transitions for Each Motion Type:")
+    # for motion, transitions in motion_strings.items():
+    #     print(f"{motion}: {', '.join(transitions)}")
 
     final_scene_times = scene_change_times
     final_scene_times.insert(0, 0)
@@ -926,35 +1069,39 @@ def process_data():
     # print(final_anim_frames)
     # print(final_scene_times)
     # Print the animation prompts
-    print("\nAnimation Prompts:")
+    # print("\nAnimation Prompts:")
     animation_prompts = ""
 
-    print("BAnANANANA", final_scene_times, final_anim_frames)
+    # print("BAnANANANA", final_scene_times, final_anim_frames)
     if final_anim_frames[-1] + 1 == final_anim_frames[-2]:
         final_anim_frames=final_anim_frames[:-1]
-    print("BAnANANANA After", final_scene_times, final_anim_frames)
+    # print("BAnANANANA After", final_scene_times, final_anim_frames)
 
     
     for i in range(len(final_anim_frames) - 1):
         animation_prompts += f"{final_anim_frames[i]}: | "
-        print(f"Start Time: {final_scene_times[i]}, End Time: {final_scene_times[i+1]}, Start Frame: {final_anim_frames[i]}, End Frame: {final_anim_frames[i+1]}")
+        # print(f"Start Time: {final_scene_times[i]}, End Time: {final_scene_times[i+1]}, Start Frame: {final_anim_frames[i]}, End Frame: {final_anim_frames[i+1]}")
 
     animation_prompts = animation_prompts[:-2]
     # print(animation_prompts)
     # For demonstration, we'll just return the received data
     prompts = generate_image_prompts(form_data, final_anim_frames)
-    print("PROMPTS")
-    print(prompts)
+    # print("PROMPTS")
+    # print(prompts)
     # print("MOTIONS")
     # print(motion_strings)
     deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts,seed)
-    print("DEFORUM PROMPTS")
+    print("----------------DEFORUM PROMPTS----------------")
     print(deforum_prompt)
     output = api.run(
         "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
         input=deforum_prompt)
-    # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
+    # output = 'https://replicate.delivery/yhqm/PC328eeCcck7vk76cL6VMpfNC90mQ4tNmIhZXgNTaXUT1qmnA/out.mp4'
+
     print("OUTPUT", output)
+    #ADDED TO EDIT VIDEO
+    # final_video = process_video_with_speed_adjustments(output, adjustments, song_name)
+    # print(f"Final video saved to: {final_video}")
     response = {
         'timestamps_scenes': timestamps_scenes,
         'form_data': form_data,

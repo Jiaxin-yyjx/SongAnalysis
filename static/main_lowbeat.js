@@ -31,7 +31,7 @@ const colorOptions = ['black/white', 'myriad of color', 'sky blue (#00BFFF)', "f
 const motions = ['zoom_in', 'zoom_out', 'pan_right', 'pan_left', 'pan_up', 'pan_down', 'spin_cw', 'spin_ccw', 'rotate_up', 'rotate_down', 'rotate_right', 'rotate_left', 'rotate_cw', 'rotate_ccw', 'none'];
 const motions_3D = ['zoom_in', 'zoom_out', 'rotate_up', 'rotate_down', 'rotate_right', 'rotate_left', 'rotate_cw', 'rotate_ccw', 'none'];
 const motions_2D = ['zoom_in', 'zoom_out', 'pan_right', 'pan_left', 'pan_up', 'pan_down', 'spin_cw', 'spin_ccw', 'none'];
-const strengths = ['weak', 'normal', 'strong', 'vstrong','10*sin(2*3.14*t/10)'];
+const strengths = ['weak', 'normal', 'strong', 'vstrong','5*sin(2*3.14*t/5)'];
 const images = {
     "chaotic_intertwining_lines": [
         "chaotic_intertwining_lines_charcoal_drawing_output_0.webp",
@@ -1698,14 +1698,15 @@ function processTable() {
     if (isNaN(seed)) {
         seed = 868591112; // Default value
     }
-    
+    console.log(document.getElementById('audioFile').files[0].name)
     const data = {
         timestamps_scenes: significantPoints.map(point => point.toFixed(2)),
         form_data: formData,
         transitions_data: transitionsData,
         song_len: audioDuration,
         motion_mode: motion_mode,
-        seed: seed
+        seed: seed,
+        song_name: document.getElementById('audioFile').files[0].name
     };
     document.getElementById('processing').style = "display: block;"
     const loadingIndicator = document.getElementById("loadingIndicator_process");
