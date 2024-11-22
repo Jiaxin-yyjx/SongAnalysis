@@ -29,4 +29,21 @@ $(document).ready(function () {
             }
         });
     });
+    // Make the image draggable
+    $('#output-container').on('mousedown', '#generated-image', function (event) {
+        let $image = $(this);
+        let offsetX = event.clientX - $image.position().left;
+        let offsetY = event.clientY - $image.position().top;
+
+        $(document).on('mousemove.draggable', function (event) {
+            $image.css({
+                left: event.clientX - offsetX,
+                top: event.clientY - offsetY
+            });
+        });
+
+        $(document).on('mouseup.draggable', function () {
+            $(document).off('.draggable');
+        });
+    });
 });

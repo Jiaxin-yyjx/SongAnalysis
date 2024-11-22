@@ -1,10 +1,10 @@
-# SongAnalysis
+# AI Music and Art Stories
 
 ## Getting Started
 To get started with the Flask website, follow these steps:
 1. Clone the Repository
 ```bash
-git clone https://github.com/Jiaxin-yyjx/SongAnalysis.git
+git clone https://github.com/Jiaxin-yyjx/AI-Music-Art-Stories.git
 ```
 
 2. Install Dependencies
