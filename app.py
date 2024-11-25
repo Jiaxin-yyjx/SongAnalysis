@@ -353,10 +353,11 @@ def get_motion_and_speed(time, form_data):
     # Validate and pair motion and strength
     motions = []
     for motion, strength in zip(motion_list, strength_list):
+        print("Motion, strength: ", motion, strength)
         if motion not in motion_options:
             print(f"Invalid motion option '{motion}' for time {time}. Using default 'none'.")
             motion = 'none'
-        if strength not in strength_options and not is_valid_strength_expression(strength):
+        # if strength not in strength_options and not is_valid_strength_expression(strength):
         # if strength not in strength_options:
             print(f"Invalid strength option '{strength}' for time {time}. Using default 'normal'.")
             strength = 'normal'

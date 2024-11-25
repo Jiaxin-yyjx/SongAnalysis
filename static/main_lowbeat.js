@@ -1539,10 +1539,11 @@ function fillDefaults() {
 
 // Validation Function
 function validateInputs(motionInput, strengthInput, index) {
+    console.log("motion values: ", motionInput)
+    console.log("strengthValues", strengthInput)
     // Split inputs by comma
     const motionValues = motionInput.split(",").map(item => item.trim());
     const strengthValues = strengthInput.split(",").map(item => item.trim());
-
     // Check if counts match
     if (motionValues.length !== strengthValues.length) {
         alert(`Timestamp ${index + 1}: Mismatch in the number of motion and strength inputs. Ensure they match.`);
@@ -1558,13 +1559,18 @@ function validateInputs(motionInput, strengthInput, index) {
 
     // Validate strength values
     const invalidStrengths = strengthValues.filter(value => {
-        // Check if value is not in strengths and not a valid mathematical function
-        return !strengths.includes(value) && !["sin", "cos", "tan"].includes(value);
+        // Check if value is not a valid strength or a valid mathematical function or integer
+        const isInteger = /^-?\d+$/.test(value); // Matches positive or negative integers
+        const isValidFunction = /^-?(\d+(\.\d+)?(\*\d+(\.\d+)?)*)?\*?(sin|cos|tan)\((-?\d+(\.\d+)?(\*\d+(\.\d+)?)*)?\*?t\/\d+(\.\d+)?\)$/.test(value); // Matches functions like 10*sin(2*t/5)
+        console.log(!strengths.includes(value), !isInteger, !isValidFunction)
+        return !strengths.includes(value) && !isInteger && !isValidFunction;
     });
+    
     if (invalidStrengths.length > 0) {
-        alert(`Timestamp ${index + 1}: Invalid strength values: ${invalidStrengths.join(", ")}. Valid strengths: ${strengths.join(", ")} or mathematical functions like sin, cos.`);
+        alert(`Timestamp ${index + 1}: Invalid strength values: ${invalidStrengths.join(", ")}. Valid strengths: integers or mathematical functions like 10*sin(2*t/5).`);
         return false;
     }
+    
 
     return true;
 }
@@ -1588,6 +1594,7 @@ function gatherFormData() {
 
         // Validate motion and strength inputs
         if (!validateInputs(motionInput, strengthInput, index)) {
+            console.log("invalid form data")
             return null; // Stop the form submission if validation fails
         }
 
@@ -1637,60 +1644,57 @@ function gatherFormData() {
 // }
 
 function gatherTransitionData(formData) {
-    const transitionsData = {};
+    let transitionsData = {};
 
     // Extract the valid transition sections
     const transitionSections = document.querySelectorAll('.section.transition-section');
 
-    transitionSections.forEach((section) => {
+    for (let index = 0; index < transitionSections.length; index++) {
+        const section = transitionSections[index];
+
         // Extract the time-range div within this section
         const timeRangeDiv = section.querySelector('.time-range');
-        // console.log(timeRangeDiv)
 
         // Extract the IDs for motion, strength, and speed inputs
         const motionInput = section.querySelector('input[id^="motion_trans_"]');
         const strengthInput = section.querySelector('input[id^="strength_trans_"]');
-        // const speedInput = section.querySelector('input[id^="speed_trans_"]');
-        // console.log(motionInput, strengthInput);
 
-        // Check if all three inputs are present
-        // if (motionInput && strengthInput && speedInput) {
+        if (!validateInputs(motionInput.value, strengthInput.value, index)) {
+            return null; // Exit the entire function
+        }
+
         if (motionInput && strengthInput) {
+
             // Extract the startTime and endTime from the time-range text
             const timeRangeText = timeRangeDiv.innerText;
-            // console.log(timeRangeText);
             const matches = timeRangeText.match(/Transition \((\d+(\.\d+)?)s to (\d+(\.\d+)?)s\)/);
-            // console.log(matches);
+
             if (matches) {
-                // console.log("MATCHES: ");
-                // console.log(matches);
                 const startTime = parseFloat(matches[1]).toFixed(2);
                 const endTime = parseFloat(matches[3]).toFixed(2);
                 const timeRange = `${startTime}-${endTime}`;
-                // console.log(timeRange);
 
                 transitionsData[timeRange] = {
-                    // "vibe": document.getElementById(`vibe_form_${startTime}_${endTime}`).value,
-                    // "imagery": document.getElementById(`imagery_form_${startTime}_${endTime}`).value,
-                    // "texture": document.getElementById(`texture_form_${startTime}_${endTime}`).value,
-                    // "style": document.getElementById(`style_form_${startTime}_${endTime}`).value,
-                    // "color": document.getElementById(`color_form_${startTime}_${endTime}`).value,
                     "motion": motionInput.value,
                     "strength": strengthInput.value,
-                    // "speed": speedInput.value,
                     "transition": true // Since all inputs are present, it's a valid transition
                 };
             }
         }
-    });
+    }
 
-    // console.log(transitionsData);
     return transitionsData;
 }
+
 
 function processTable() {
     const formData = gatherFormData();
     const transitionsData = gatherTransitionData(formData);
+    console.log("form data: ", formData);
+    console.log("transition data: ", transitionsData);
+    if (formData == null || transitionsData == null){
+        return null;
+    }
     let seed = document.getElementById("seed").value;
     document.getElementById('processedDataContainer').innerHTML = '';
             document.getElementById('processedDataContainer').style = "border: none;"
