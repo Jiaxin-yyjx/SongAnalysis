@@ -32,6 +32,7 @@ const motions = ['zoom_in', 'zoom_out', 'pan_right', 'pan_left', 'pan_up', 'pan_
 const motions_3D = ['zoom_in', 'zoom_out', 'rotate_up', 'rotate_down', 'rotate_right', 'rotate_left', 'rotate_cw', 'rotate_ccw', 'none'];
 const motions_2D = ['zoom_in', 'zoom_out', 'pan_right', 'pan_left', 'pan_up', 'pan_down', 'spin_cw', 'spin_ccw', 'none'];
 const strengths = ['weak', 'normal', 'strong', 'vstrong', '5*sin(2*3.14*t/5)'];
+
 const images = {
     "chaotic_intertwining_lines": [
         "chaotic_intertwining_lines_charcoal_drawing_output_0.webp",
@@ -1570,6 +1571,7 @@ function validateInputs(motionInput, strengthInput, index) {
         alert(`Timestamp ${index + 1}: Invalid strength values: ${invalidStrengths.join(", ")}. Valid strengths: integers or mathematical functions like 10*sin(2*t/5).`);
         return false;
     }
+    
 
 
     return true;
@@ -1692,6 +1694,7 @@ function processTable() {
     const transitionsData = gatherTransitionData(formData);
     console.log("form data: ", formData);
     console.log("transition data: ", transitionsData);
+
     if (formData == null || transitionsData == null) {
         return null;
     }
