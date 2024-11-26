@@ -14,12 +14,14 @@ app = Flask(__name__, template_folder='./templates', static_folder='./static')
 # api_key = os.getenv("OPENAI_DISCO_API_KEY")
 # client = OpenAI(api_key=api_key)
 
-# api_token = os.getenv("MY_REPLICATE_TOKEN")
-api_token = os.getenv("LAB_DISCO_API_KEY")
-# api_token = ''
-print("API TOKEN?: ", api_token)
-api = replicate.Client(api_token=api_token)
+# Get the API key from environment variables
+REPLICATE_API_TOKEN = os.getenv("LAB_DISCO_API_KEY")
 
+# Initialize Replicate client
+if REPLICATE_API_TOKEN:
+    api = replicate.Client(api_token=REPLICATE_API_TOKEN)
+else:
+    raise ValueError("Replicate API key is not set. Please check your environment variables.")
 
 motion_magnitudes = {
     "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 3, "vstrong": 10},
