@@ -34,7 +34,8 @@
 </div>
 
 <div id="waveform" style="position: relative;">
-    <div id="loadingIndicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+    <div id="loadingIndicator"
+        style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
         <div class="spinner"></div>
     </div>
 </div>
@@ -178,7 +179,7 @@
             <hr>
             <button id="fill-defaults" style="display: none;" onclick="fillDefaultsTemp()">Fill With Defaults</button>
 
-            
+
         </div>
         <div id="image_examples"
             style="width: 70%; display: none; border: 1px solid #ddd; padding: 30px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1);">
@@ -199,7 +200,7 @@
             <div class="image-container" id="image-container"></div>
         </div>
     </div>
-    
+
 </div>
 
 </br>
@@ -207,9 +208,34 @@
     <div class="row">
         <div class="col">
             <h3 style="margin-bottom: 10px;">Initial Image Brainstorming</h3>
+            <form id="image-form">
+                <div class="form-group">
+                    <label for="prompt">Enter your prompt:</label>
+                    <input type="text" class="form-control" id="prompt" name="prompt"
+                        placeholder="e.g., abstract style black line drawing...">
+                </div>
+                </br>
+                <button type="submit" class="btn btn-outline-primary btn-sm">Generate Image</button>
+            </form>
+            <div id="output-container" class="mt-5">
+                <div id="loading-indicator" class="text-center" style="display: none;">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <img id="generated-image" src="" alt="Your Generated Image" class="img-fluid" style="display: none;">
+            </div>
         </div>
         <div class="col">
             <h3 style="margin-bottom: 10px;">Initial Image</h3>
+            <label for="input-file" id="drop-area">
+                <input type="file" accept="image/*" id="input-file" hidden>
+                <div id="img-view">
+                    <img src="./static/icon.png">
+                    <p>Drag and drop or click here <br> to upload image</p>
+                    <span> Upload any images from desktop</span>
+                </div>
+            </label>
         </div>
     </div>
 </div>
@@ -259,45 +285,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.4.0/wavesurfer.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.4.0/plugin/wavesurfer.regions.min.js"></script>
-
-<script>
-    $(document).ready(function () {
-        console.log("Document is ready!"); // Check if this logs to ensure jQuery is working
-
-        let selectedImagePath = null;
-
-        // Handle selection of predefined images
-        $('.selectable-image').on('click', function () {
-            console.log("Image clicked!"); // Confirm click event
-
-            // Remove the 'selected' class from any previously selected image
-            $('.selectable-image').removeClass('selected');
-
-            // Add the 'selected' class to the clicked image
-            $(this).addClass('selected');
-
-            // Store the path of the selected image
-            selectedImagePath = $(this).data('path');
-            console.log("Selected image path:", selectedImagePath); // Log selected path
-        });
-
-        // Handle the Submit button click
-        $('#submitSelectedImage').on('click', function () {
-            if (!selectedImagePath) {
-                alert("Please select an image before submitting.");
-                return;
-            }
-
-            // Remove the 'selected' class from all images to hide the border
-            $('.selectable-image').removeClass('selected');
-
-            // Clear the selected image path
-            selectedImagePath = null;
-
-            // Display success message
-            $('#predefinedImages').after("<p>Initial image selected successfully!</p>");
-        });
-    });
-</script>
-
+<script src="{{url_for('static', filename='image.js')}}"></script>
 {% endblock %}

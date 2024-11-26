@@ -17,12 +17,14 @@ app = Flask(__name__, template_folder='./templates', static_folder='./static')
 # api_key = os.getenv("OPENAI_DISCO_API_KEY")
 # client = OpenAI(api_key=api_key)
 
-# api_token = os.getenv("MY_REPLICATE_TOKEN")
-api_token = os.getenv("LAB_DISCO_API_KEY")
-# api_token = ''
-print("API TOKEN?: ", api_token)
-api = replicate.Client(api_token=api_token)
+# Get the API key from environment variables
+REPLICATE_API_TOKEN = os.getenv("LAB_DISCO_API_KEY")
 
+# Initialize Replicate client
+if REPLICATE_API_TOKEN:
+    api = replicate.Client(api_token=REPLICATE_API_TOKEN)
+else:
+    raise ValueError("Replicate API key is not set. Please check your environment variables.")
 
 motion_magnitudes = {
     "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 10, "vstrong": 20},
@@ -205,9 +207,43 @@ def upload_audio_large():
         return jsonify({"success": True, "low_energy_timestamps": low_energy_before_onset, "top_onset_times": top_onset_times, "duration": duration})
     return jsonify({"success": False, "error": "No file provided"}), 400
 
-@app.route('/initial_image')
-def initial_image():
-    return render_template('quick_start.html')
+    
+@app.route('/generate_initial', methods=['POST'])
+def generate_initial():
+    data = request.get_json()
+    prompt = data.get('prompt', '')
+
+    if not prompt:
+        return jsonify({'error': 'No prompt provided'}), 400
+
+    try:
+        output = api.run(
+            "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
+            input={
+                "width": 768,
+                "height": 768,
+                "prompt": prompt,
+                "scheduler": "KarrasDPM",
+                "num_outputs": 1,
+                "guidance_scale": 7.5,
+                "apply_watermark": True,
+                "negative_prompt": "worst quality, low quality",
+                "prompt_strength": 0.8,
+                "num_inference_steps": 40
+            },
+            timeout=180
+        )
+        # Assuming the output is a list of FileOutput objects, extract the URL
+        if output and isinstance(output, list):
+            image_url = str(output[0])  # Convert FileOutput to string to extract the URL
+            print("Initial Image OUTPUT", image_url)
+            return jsonify({'output': image_url})
+
+        return jsonify({'error': 'Unexpected output format'}), 500
+
+    except Exception as e:
+        print("Error:", str(e))  # Log the actual error to the console
+        return jsonify({'error': str(e)}), 500
 
 
 def split_and_pair_values(data):
@@ -876,7 +912,8 @@ def create_deforum_prompt(motion_data, final_anim_frames, motion_mode, prompts,s
         "use_mask": False,
         "clip_name": "ViT-L/14",
         "far_plane": 10000,
-        "init_image": "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg",
+        # "init_image": "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg",
+        "init_image": "https://replicate.delivery/pbxt/bb6BIQ1vtyIhOhe6p8ZaeeEg4rYm2k9UNTbipzxzzT2xw2pnA/out-0.png",
         "max_frames": final_anim_frames[-1],
         "near_plane": 200,
         "invert_mask": False,
