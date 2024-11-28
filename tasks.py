@@ -18,7 +18,7 @@ from helpers import (  # Adjust the import paths as needed
     create_deforum_prompt
 )
 
-init_image = "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg"
+
 
 
 # Redis connection
@@ -237,6 +237,7 @@ def long_running_task(data):
         # api_key = os.getenv("REPLICATE_API_KEY")  # Store your API key in environment variables
         print("Long running running")
         api_key = data['api_key']
+        print("api key: ", api_key)
         api = replicate.Client(api_token=api_key)
         print("API: ", api_key)
         timestamps_scenes = data['timestamps_scenes']
@@ -260,7 +261,8 @@ def long_running_task(data):
         # Create the Deforum prompt
         print("INIT IMAGE TO BE PASSED IN: ", input_image_url)
         if not input_image_url:
-            input_image_url = init_image
+            print("no input image url specified")
+            input_image_url = "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg"
         print("INIT IMAGE THAT IS PASSED IN: ", input_image_url)
         deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts, seed, input_image_url)
         print("deforum prompt: ", deforum_prompt)

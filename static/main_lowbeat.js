@@ -1511,7 +1511,7 @@ function fillDefaults() {
             else if (input.id.includes('motion_trans')) {
                 if (!input.value && motion_mode === "3D" || motion_mode === "3D" && (input.value.includes("spin") || input.value.includes("pan"))) {
                     if (endTime == audioDuration) {
-                        input.value = 'rotate_ccw';
+                        input.value = 'rotate_cw';
                     } else {
                         input.value = 'rotate_right';
                     }
