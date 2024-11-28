@@ -1836,6 +1836,12 @@ function checkJobStatus(jobId) {
 
 // Handle the job result
 function handleJobResult(statusData) {
+    console.log("status data: ", statusData);
+    if (statusData.result.error) {
+        console.log("error: ", statusData.result.error);
+        alert(`Error: ${statusData.result.error}. Check API dashboard and try again.`);
+        return; // Exit the function to prevent further processing
+    }
     const resultHTML = buildResultHTML(statusData.result);  // Assume the result is in 'statusData.result'
     console.log("job completed")
     // Display the results on the page
@@ -1849,7 +1855,15 @@ function handleJobResult(statusData) {
 
 // Build the HTML result
 function buildResultHTML(result) {
-    console.log("build result")
+    let backgroundImageUrl = $('#img-view').css('background-image');
+    
+    // Extract the URL (removes the `url("...")` part)
+    backgroundImageUrl = backgroundImageUrl.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+
+    // Now backgroundImageUrl contains the URL in text format
+    console.log("image url: ", backgroundImageUrl);
+    result = result.output
+    console.log("build result: ", result)
     let resultHTML = '';
 
     // Build HTML based on the result (adjust this according to your response data structure)
@@ -1863,6 +1877,13 @@ function buildResultHTML(result) {
     if (result.prompts) {
         resultHTML += `<h3>Prompts:</h3><p>${result.prompts}</p>`;
     }
+
+    if (backgroundImageUrl) {
+        resultHTML += `<h3>Initial Image Used:</h3><p><a href="${backgroundImageUrl}" target="_blank">${backgroundImageUrl}</a></p>`;
+    } else {
+        resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
+    }
+    
 
     if (result.output) {
         resultHTML += `<h3>Output:</h3><p><a href="${result.output}" target="_blank">Click here to view the output</a></p>`;
@@ -1881,6 +1902,14 @@ function processTable() {
     if (isNaN(seed)) {
         seed = 868591112; // Default value
     }
+    let backgroundImageUrl = $('#img-view').css('background-image');
+    
+    // Extract the URL (removes the `url("...")` part)
+    backgroundImageUrl = backgroundImageUrl.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+
+    // Now backgroundImageUrl contains the URL in text format
+    console.log("image url: ", backgroundImageUrl);
+
 
     const data = {
         timestamps_scenes: significantPoints.map(point => point.toFixed(2)),
@@ -1888,7 +1917,8 @@ function processTable() {
         transitions_data: transitionsData,
         song_len: audioDuration,
         motion_mode: motion_mode,
-        seed: seed
+        seed: seed,
+        input_image_url: backgroundImageUrl
     };
     document.getElementById('processing').style = "display: block;"
     const loadingIndicator = document.getElementById("loadingIndicator_process");

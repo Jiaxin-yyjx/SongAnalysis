@@ -7,9 +7,10 @@ import tempfile
 from flask import Flask, jsonify, request, render_template
 import replicate
 from dotenv import load_dotenv
-from tasks import long_running_task, process_audio
+from tasks import long_running_task, process_audio, generate_image_task
 from queue_config import queue
 from flask_cors import CORS
+from datetime import datetime
 
 load_dotenv()
 app = Flask(__name__, template_folder='./templates', static_folder='./static')
@@ -229,45 +230,90 @@ def upload_audio_large():
     return jsonify({"success": False, "error": "No file provided"}), 400
 
     
+# @app.route('/generate_initial', methods=['POST'])
+# def generate_initial():
+#     data = request.get_json()
+#     prompt = data.get('prompt', '')
+#     api_key = api_key_storage
+#     print("API TOKEN?: ", api_key)
+#     api = replicate.Client(api_token=api_key)
+
+#     if not prompt:
+#         return jsonify({'error': 'No prompt provided'}), 400
+
+#     try:
+#         output = api.run(
+#             "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
+#             input={
+#                 "width": 768,
+#                 "height": 768,
+#                 "prompt": prompt,
+#                 "scheduler": "KarrasDPM",
+#                 "num_outputs": 1,
+#                 "guidance_scale": 7.5,
+#                 "apply_watermark": True,
+#                 "negative_prompt": "worst quality, low quality",
+#                 "prompt_strength": 0.8,
+#                 "num_inference_steps": 40
+#             },
+#             timeout=180
+#         )
+#         # Assuming the output is a list of FileOutput objects, extract the URL
+#         if output and isinstance(output, list):
+#             image_url = str(output[0])  # Convert FileOutput to string to extract the URL
+#             print("Initial Image OUTPUT", image_url)
+#             return jsonify({'output': image_url})
+
+#         return jsonify({'error': 'Unexpected output format'}), 500
+
+#     except Exception as e:
+#         print("Error:", str(e))  # Log the actual error to the console
+#         return jsonify({'error': str(e)}), 500
+
+# @app.route('/check_job_status_generate/<job_id>', methods=['GET'])
+# def check_job_status_generate(job_id):
+#     job = queue.fetch_job(job_id)
+    
+#     if job is None:
+#         return jsonify({'status': 'failed', 'error': 'Job not found'}), 404
+
+#     print("Status Generate: ", job.get_status())
+#     if job.is_finished:
+#         result = job.result
+#         print("Job result: ", result)
+#         if result and isinstance(result, dict):
+#             # Check for error or output
+#             if 'output' in result:
+#                 return jsonify({'status': 'finished', 'output': result['output']})
+#             elif 'error' in result:
+#                 return jsonify({'status': 'failed', 'error': result['error']}), 500
+#         return jsonify({'status': 'failed', 'error': 'Unexpected output format'}), 500
+    
+#     if job.is_failed:
+#         return jsonify({'status': 'failed', 'error': 'Job failed due to timeout or other error'}), 500
+    
+#     # Job is still processing
+#     return jsonify({'status': job.get_status()}), 200
+
+
 @app.route('/generate_initial', methods=['POST'])
 def generate_initial():
     data = request.get_json()
     prompt = data.get('prompt', '')
     api_key = api_key_storage
     print("API TOKEN?: ", api_key)
-    api = replicate.Client(api_token=api_key)
+    data['api_key'] = api_key 
 
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400
 
+    # Enqueue the task and return the job ID
     try:
-        output = api.run(
-            "lucataco/open-dalle-v1.1:1c7d4c8dec39c7306df7794b28419078cb9d18b9213ab1c21fdc46a1deca0144",
-            input={
-                "width": 768,
-                "height": 768,
-                "prompt": prompt,
-                "scheduler": "KarrasDPM",
-                "num_outputs": 1,
-                "guidance_scale": 7.5,
-                "apply_watermark": True,
-                "negative_prompt": "worst quality, low quality",
-                "prompt_strength": 0.8,
-                "num_inference_steps": 40
-            },
-            timeout=180
-        )
-        # Assuming the output is a list of FileOutput objects, extract the URL
-        if output and isinstance(output, list):
-            image_url = str(output[0])  # Convert FileOutput to string to extract the URL
-            print("Initial Image OUTPUT", image_url)
-            return jsonify({'output': image_url})
-
-        return jsonify({'error': 'Unexpected output format'}), 500
-
+        job = queue.enqueue(generate_image_task, data, job_timeout=300)  # Set a job timeout (e.g., 60 seconds)
+        return jsonify({'job_id': job.get_id(), 'status': 'queued'}), 202
     except Exception as e:
-        print("Error:", str(e))  # Log the actual error to the console
         return jsonify({'error': str(e)}), 500
+
 
 
 def split_and_pair_values(data):
@@ -1178,6 +1224,31 @@ def adjust_video_speed(input_video, adjustments, output_video):
 
 #     return jsonify(response)
 
+# @app.route('/check_job_status_generate/<job_id>', methods=['GET'])
+# def check_job_status_generate(job_id):
+#     job = queue.fetch_job(job_id)
+    
+#     if job is None:
+#         return jsonify({'status': 'failed', 'error': 'Job not found'}), 404
+#     print("Status Generate: ", job.get_status())
+#     if job.is_finished:
+#         result = job.result
+#         print("Job result: ", result)
+#         if result and isinstance(result, dict):
+#             # Check for error or output
+#             if 'output' in result:
+#                 return jsonify({'status': 'finished', 'output': result['output']})
+#             elif 'error' in result:
+#                 return jsonify({'status': 'failed', 'error': result['error']}), 500
+#         return jsonify({'status': 'failed', 'error': 'Unexpected output format'}), 500
+    
+#     if job.is_failed:
+#         return jsonify({'status': 'failed', 'error': 'Job failed'}), 500
+    
+#     # Job is still processing
+#     return jsonify({'status': 'processing'}), 200
+
+
 @app.route("/check-job-status/<job_id>", methods=["GET"])
 def check_job_status(job_id):
     # Get the job from the queue
@@ -1209,10 +1280,10 @@ def process_data():
     api_key = api_key_storage
     print("API TOKEN?: ", api_key)
     data['api_key'] = api_key 
-    
+    # data['enqueue_time'] = datetime.now()
     # api = replicate.Client(api_token=api_key)
     print("ABOUT TO ENQUEUE")
-    job = queue.enqueue(long_running_task, data,job_timeout=2400)
+    job = queue.enqueue(long_running_task, data,job_timeout=3000)
     print(job)
     print("done enqueue")
     
