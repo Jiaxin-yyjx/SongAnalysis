@@ -1878,9 +1878,7 @@ function buildResultHTML(result) {
         resultHTML += `<h3>Prompts:</h3><p>${result.prompts}</p>`;
     }
 
-    if (backgroundImageUrl) {
-        resultHTML += `<h3>Initial Image Used:</h3><p><a href="${backgroundImageUrl}" target="_blank">${backgroundImageUrl}</a></p>`;
-    } else {
+    if (result.input_image_url) {
         resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
     }
     

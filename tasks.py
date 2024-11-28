@@ -178,25 +178,25 @@ def generate_image_task(data):
         #     timeout=600
         # )
 
-        output = api.run(
-            "stability-ai/stable-diffusion-3.5-large",
-            input={
-                "prompt": prompt,
-                "width": 768,
-                "height": 768,
-                "num_outputs": 1,
-                "guidance_scale": 7.5,
-                "apply_watermark": True,
-                "negative_prompt": "worst quality, low quality",
-                "prompt_strength": 0.8,
-                "num_inference_steps": 40
-            }
-        )
+        # output = api.run(
+        #     "stability-ai/stable-diffusion-3.5-large",
+        #     input={
+        #         "prompt": prompt,
+        #         "width": 768,
+        #         "height": 768,
+        #         "num_outputs": 1,
+        #         "guidance_scale": 7.5,
+        #         "apply_watermark": True,
+        #         "negative_prompt": "worst quality, low quality",
+        #         "prompt_strength": 0.8,
+        #         "num_inference_steps": 40
+        #     }
+        # )
 
 
 
         # Simulate a long-running process, like calling an API
-        # output = ["https://replicate.delivery/xezq/e7L0heZDcQkglUAxvUGnkXPE5n0ar6eRPlOrdj57th9pFQrnA/out-0.webp"]
+        output = ["https://replicate.delivery/xezq/e7L0heZDcQkglUAxvUGnkXPE5n0ar6eRPlOrdj57th9pFQrnA/out-0.webp"]
         # output = ["https://png.pngtree.com/png-clipart/20230512/original/pngtree-isolated-front-view-cat-on-white-background-png-image_9158426.png"]
         print("output done: ", output)
         # Simulating a timeout with sleep
@@ -246,7 +246,7 @@ def long_running_task(data):
         song_len = data['song_len']
         motion_mode = data['motion_mode']
         seed = data['seed']
-        input_image_url = data['input_image_url']
+        input_image_url = data.get('input_image_url',"https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg")
 
         # Processing the data
         song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data = parse_input_data(form_data, transitions_data, song_len)
@@ -260,20 +260,20 @@ def long_running_task(data):
 
         # Create the Deforum prompt
         print("INIT IMAGE TO BE PASSED IN: ", input_image_url)
-        if not input_image_url:
-            print("no input image url specified")
+        if not input_image_url or str(input_image_url).lower() == "none":
+            print("No valid input image URL specified. Using default.")
             input_image_url = "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg"
         print("INIT IMAGE THAT IS PASSED IN: ", input_image_url)
         deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts, seed, input_image_url)
         print("deforum prompt: ", deforum_prompt)
         # Run the API
-        output = api.run(
-            "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
-            input=deforum_prompt
-        )
-        # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
+        # output = api.run(
+        #     "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
+        #     input=deforum_prompt
+        # )
+        output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
 
-        # time.sleep(12)
+        time.sleep(12)
         # Compile the response
         response = {
             'timestamps_scenes': timestamps_scenes,
@@ -284,7 +284,7 @@ def long_running_task(data):
             'motion_prompts': motion_strings,
             'prompts': prompts,
             'output': output,
-            'input_image_url': init_image
+            'input_image_url': input_image_url
         }
         return {"status": "success", "output": response}
     except JobTimeoutException:
