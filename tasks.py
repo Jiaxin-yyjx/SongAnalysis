@@ -178,25 +178,25 @@ def generate_image_task(data):
         #     timeout=600
         # )
 
-        # output = api.run(
-        #     "stability-ai/stable-diffusion-3.5-large",
-        #     input={
-        #         "prompt": prompt,
-        #         "width": 768,
-        #         "height": 768,
-        #         "num_outputs": 1,
-        #         "guidance_scale": 7.5,
-        #         "apply_watermark": True,
-        #         "negative_prompt": "worst quality, low quality",
-        #         "prompt_strength": 0.8,
-        #         "num_inference_steps": 40
-        #     }
-        # )
+        output = api.run(
+            "stability-ai/stable-diffusion-3.5-large",
+            input={
+                "prompt": prompt,
+                "width": 768,
+                "height": 768,
+                "num_outputs": 1,
+                "guidance_scale": 7.5,
+                "apply_watermark": True,
+                "negative_prompt": "worst quality, low quality",
+                "prompt_strength": 0.8,
+                "num_inference_steps": 40
+            }
+        )
 
 
 
         # Simulate a long-running process, like calling an API
-        output = ["https://replicate.delivery/xezq/e7L0heZDcQkglUAxvUGnkXPE5n0ar6eRPlOrdj57th9pFQrnA/out-0.webp"]
+        # output = ["https://replicate.delivery/xezq/e7L0heZDcQkglUAxvUGnkXPE5n0ar6eRPlOrdj57th9pFQrnA/out-0.webp"]
         # output = ["https://png.pngtree.com/png-clipart/20230512/original/pngtree-isolated-front-view-cat-on-white-background-png-image_9158426.png"]
         print("output done: ", output)
         # Simulating a timeout with sleep
@@ -267,13 +267,15 @@ def long_running_task(data):
         deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts, seed, input_image_url)
         print("deforum prompt: ", deforum_prompt)
         # Run the API
-        # output = api.run(
-        #     "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
-        #     input=deforum_prompt
-        # )
-        output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
+        output = api.run(
+            "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
+            input=deforum_prompt
+        )
 
-        time.sleep(12)
+        print("output: ", output)
+        # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
+
+        # time.sleep(12)
         # Compile the response
         response = {
             'timestamps_scenes': timestamps_scenes,
