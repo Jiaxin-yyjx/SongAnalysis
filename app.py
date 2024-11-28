@@ -1,30 +1,51 @@
 import os
-import openai
-from openai import OpenAI
+# import openai
+# from openai import OpenAI
 import librosa
 import numpy as np
+import tempfile
 from flask import Flask, jsonify, request, render_template
 import replicate
 from dotenv import load_dotenv
-import math
-import subprocess
-import requests
-import re
+from tasks import long_running_task, process_audio
+from queue_config import queue
+from flask_cors import CORS
 
 load_dotenv()
 app = Flask(__name__, template_folder='./templates', static_folder='./static')
-
+CORS(app)
 # api_key = os.getenv("OPENAI_DISCO_API_KEY")
 # client = OpenAI(api_key=api_key)
 
 # Get the API key from environment variables
-REPLICATE_API_TOKEN = os.getenv("LAB_DISCO_API_KEY")
-
+# REPLICATE_API_TOKEN = os.getenv("LAB_DISCO_API_KEY")
+api_key_storage = ''
 # Initialize Replicate client
-if REPLICATE_API_TOKEN:
-    api = replicate.Client(api_token=REPLICATE_API_TOKEN)
-else:
-    raise ValueError("Replicate API key is not set. Please check your environment variables.")
+# if REPLICATE_API_TOKEN:
+#     api = replicate.Client(api_token=REPLICATE_API_TOKEN)
+# else:
+#     raise ValueError("Replicate API key is not set. Please check your environment variables.")
+
+@app.route('/save_api_key', methods=['POST'])
+def save_api_key():
+    global api_key_storage
+    try:
+        data = request.get_json()
+        api_key = data.get('api_key')
+        
+        
+
+        if not api_key:
+            return jsonify({'message': 'API Key is missing!'}), 400
+        
+        # Store the API key (you can replace this with database/file storage)
+        api_key_storage = api_key
+        print("API KEY: ", api_key_storage)
+
+        return jsonify({'message': 'API Key saved successfully!'}), 200
+    except Exception as e:
+        return jsonify({'message': f'Error: {str(e)}'}), 500
+
 
 motion_magnitudes = {
     "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 10, "vstrong": 20},
@@ -212,6 +233,9 @@ def upload_audio_large():
 def generate_initial():
     data = request.get_json()
     prompt = data.get('prompt', '')
+    api_key = api_key_storage
+    print("API TOKEN?: ", api_key)
+    api = replicate.Client(api_token=api_key)
 
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400
@@ -984,7 +1008,7 @@ def process_video_with_speed_adjustments(api_url, adjustments, song_name):
     output_file = f"./{output_dir}/" + song_name.replace(' ','_').split('.')[0] + "_output.mp4"
     
     # Step 2: Adjust the playback speed of intervals
-    adjust_video_speed(video_file, adjustments, output_file)
+    # adjust_video_speed(video_file, adjustments, output_file)
     
     # Step 3: (Optional) Upload the corrected video to a storage service or return its path
     return output_file
@@ -1059,100 +1083,142 @@ def adjust_video_speed(input_video, adjustments, output_video):
         os.remove(segment)
     os.remove("file_list.txt")
 
-@app.route('/process-data', methods=['POST'])
+# @app.route('/process-data', methods=['POST'])
+# def process_data():
+#     data = request.json
+#     timestamps_scenes = data['timestamps_scenes']
+#     form_data = data['form_data']
+#     transitions_data = data['transitions_data']
+#     song_len = data['song_len']
+#     motion_mode = data['motion_mode']
+#     seed = data['seed']
+#     song_name = data['song_name']
+
+#     # Here you can integrate your Python logic with the received data
+#     # Example: processed_data = your_function(timestamps_scenes, form_data, transitions_data)
+
+#     # print("FORM: ")
+#     # print(form_data)
+#     # print("TRANS: ")
+#     # print(transitions_data)
+
+#     song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data, og_motion_data = parse_input_data(form_data, transitions_data, song_len)
+#     final_anim_frames = []
+#     final_anim_frames.append(0)
+#     if round(song_len,2) not in scene_change_times:
+#         scene_change_times.append(round(song_len,2))
+#     # Calculate frames and generate prompts
+#     frame_data, animation_prompts, adjustments = calculate_frames(scene_change_times, interval_strings, motion_data, song_duration, final_anim_frames)
+#     # og_frame_data, _, _ = calculate_frames(scene_change_times, interval_strings, og_motion_data, song_duration, final_anim_frames)
+#     # print("OG FRAME DATA", og_frame_data, frame_data)
+#     motion_strings = build_transition_strings(frame_data)
+    
+
+#     # print("FRAME")
+#     # print(frame_data)
+#     # print("ANIM")
+#     # print(animation_prompts)
+#     # Print the final list of frame transitions for each motion type
+#     # print("\nFinal List of Frame Transitions for Each Motion Type:")
+#     # for motion, transitions in motion_strings.items():
+#     #     print(f"{motion}: {', '.join(transitions)}")
+
+#     final_scene_times = scene_change_times
+#     final_scene_times.insert(0, 0)
+#     final_scene_times.append(round(song_duration,2))
+#     final_scene_times = set(final_scene_times)
+#     final_scene_times = list(final_scene_times)
+#     # print(final_anim_frames)
+#     # print(final_scene_times)
+#     # Print the animation prompts
+#     # print("\nAnimation Prompts:")
+#     animation_prompts = ""
+
+#     # print("BAnANANANA", final_scene_times, final_anim_frames)
+#     if final_anim_frames[-1] + 1 == final_anim_frames[-2]:
+#         final_anim_frames=final_anim_frames[:-1]
+#     # print("BAnANANANA After", final_scene_times, final_anim_frames)
+
+    
+#     for i in range(len(final_anim_frames) - 1):
+#         animation_prompts += f"{final_anim_frames[i]}: | "
+#         # print(f"Start Time: {final_scene_times[i]}, End Time: {final_scene_times[i+1]}, Start Frame: {final_anim_frames[i]}, End Frame: {final_anim_frames[i+1]}")
+
+#     animation_prompts = animation_prompts[:-2]
+#     # print(animation_prompts)
+#     # For demonstration, we'll just return the received data
+#     prompts = generate_image_prompts(form_data, final_anim_frames)
+#     # print("PROMPTS")
+#     # print(prompts)
+#     # print("MOTIONS")
+#     # print(motion_strings)
+#     deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts,seed)
+#     print("----------------DEFORUM PROMPTS----------------")
+#     print(deforum_prompt)
+#     output = api.run(
+#         "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
+#         input=deforum_prompt)
+#     # output = 'https://replicate.delivery/yhqm/PC328eeCcck7vk76cL6VMpfNC90mQ4tNmIhZXgNTaXUT1qmnA/out.mp4'
+
+#     print("OUTPUT", output)
+#     #ADDED TO EDIT VIDEO
+#     # final_video = process_video_with_speed_adjustments(output, adjustments, song_name)
+#     # print(f"Final video saved to: {final_video}")
+#     response = {
+#         'timestamps_scenes': timestamps_scenes,
+#         'form_data': form_data,
+#         'transitions_data': transitions_data,
+#         'song_len': song_len,
+#         'animation_prompts': animation_prompts,
+#         'motion_prompts': motion_strings,
+#         'prompts': prompts,
+#         'output': output
+#         # 'processed_data': processed_data
+#     }
+
+#     return jsonify(response)
+
+@app.route("/check-job-status/<job_id>", methods=["GET"])
+def check_job_status(job_id):
+    # Get the job from the queue
+    job = queue.fetch_job(job_id)
+    
+    # If the job doesn't exist, return an error message
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+    
+    # Get the job's status
+    status = job.get_status()
+    print("status: ", status)
+    
+    # Check if the job is finished
+    if status == 'finished':
+        # Optionally, you can return the result of the job
+        return jsonify({"job_id": job_id, "status": "finished", "result": job.result}), 200
+    else:
+        # Return the current status if the job is still running
+        return jsonify({"job_id": job_id, "status": status}), 200
+
+
+
+@app.route("/process-data", methods=["POST"])
 def process_data():
+    # Enqueue the task and pass the request data
     data = request.json
-    timestamps_scenes = data['timestamps_scenes']
-    form_data = data['form_data']
-    transitions_data = data['transitions_data']
-    song_len = data['song_len']
-    motion_mode = data['motion_mode']
-    seed = data['seed']
-    song_name = data['song_name']
-
-    # Here you can integrate your Python logic with the received data
-    # Example: processed_data = your_function(timestamps_scenes, form_data, transitions_data)
-
-    # print("FORM: ")
-    # print(form_data)
-    # print("TRANS: ")
-    # print(transitions_data)
-
-    song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data, og_motion_data = parse_input_data(form_data, transitions_data, song_len)
-    final_anim_frames = []
-    final_anim_frames.append(0)
-    if round(song_len,2) not in scene_change_times:
-        scene_change_times.append(round(song_len,2))
-    # Calculate frames and generate prompts
-    frame_data, animation_prompts, adjustments = calculate_frames(scene_change_times, interval_strings, motion_data, song_duration, final_anim_frames)
-    # og_frame_data, _, _ = calculate_frames(scene_change_times, interval_strings, og_motion_data, song_duration, final_anim_frames)
-    # print("OG FRAME DATA", og_frame_data, frame_data)
-    motion_strings = build_transition_strings(frame_data)
+    print("PROCESS DATA")
+    api_key = api_key_storage
+    print("API TOKEN?: ", api_key)
+    data['api_key'] = api_key 
     
-
-    # print("FRAME")
-    # print(frame_data)
-    # print("ANIM")
-    # print(animation_prompts)
-    # Print the final list of frame transitions for each motion type
-    # print("\nFinal List of Frame Transitions for Each Motion Type:")
-    # for motion, transitions in motion_strings.items():
-    #     print(f"{motion}: {', '.join(transitions)}")
-
-    final_scene_times = scene_change_times
-    final_scene_times.insert(0, 0)
-    final_scene_times.append(round(song_duration,2))
-    final_scene_times = set(final_scene_times)
-    final_scene_times = list(final_scene_times)
-    # print(final_anim_frames)
-    # print(final_scene_times)
-    # Print the animation prompts
-    # print("\nAnimation Prompts:")
-    animation_prompts = ""
-
-    # print("BAnANANANA", final_scene_times, final_anim_frames)
-    if final_anim_frames[-1] + 1 == final_anim_frames[-2]:
-        final_anim_frames=final_anim_frames[:-1]
-    # print("BAnANANANA After", final_scene_times, final_anim_frames)
-
+    # api = replicate.Client(api_token=api_key)
+    print("ABOUT TO ENQUEUE")
+    job = queue.enqueue(long_running_task, data,job_timeout=2400)
+    print(job)
+    print("done enqueue")
     
-    for i in range(len(final_anim_frames) - 1):
-        animation_prompts += f"{final_anim_frames[i]}: | "
-        # print(f"Start Time: {final_scene_times[i]}, End Time: {final_scene_times[i+1]}, Start Frame: {final_anim_frames[i]}, End Frame: {final_anim_frames[i+1]}")
+    # Respond immediately with the job ID
+    return jsonify({"job_id": job.get_id(), "status": "queued"}), 202
 
-    animation_prompts = animation_prompts[:-2]
-    # print(animation_prompts)
-    # For demonstration, we'll just return the received data
-    prompts = generate_image_prompts(form_data, final_anim_frames)
-    # print("PROMPTS")
-    # print(prompts)
-    # print("MOTIONS")
-    # print(motion_strings)
-    deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts,seed)
-    print("----------------DEFORUM PROMPTS----------------")
-    print(deforum_prompt)
-    output = api.run(
-        "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
-        input=deforum_prompt)
-    # output = 'https://replicate.delivery/yhqm/PC328eeCcck7vk76cL6VMpfNC90mQ4tNmIhZXgNTaXUT1qmnA/out.mp4'
-
-    print("OUTPUT", output)
-    #ADDED TO EDIT VIDEO
-    # final_video = process_video_with_speed_adjustments(output, adjustments, song_name)
-    # print(f"Final video saved to: {final_video}")
-    response = {
-        'timestamps_scenes': timestamps_scenes,
-        'form_data': form_data,
-        'transitions_data': transitions_data,
-        'song_len': song_len,
-        'animation_prompts': animation_prompts,
-        'motion_prompts': motion_strings,
-        'prompts': prompts,
-        'output': output
-        # 'processed_data': processed_data
-    }
-
-    return jsonify(response)
 
 if __name__ == "__main__":
     # app.run(debug=True)

@@ -92,6 +92,37 @@ const images = {
     ]
 };
 
+window.onload = function() {
+    const storedKey = localStorage.getItem('api_key');
+    if (storedKey) {
+        document.getElementById('stored_key').innerText = storedKey;
+    }
+};
+
+async function sendApiKey() {
+    const apiKey = document.getElementById('api_key').value;
+    if (!apiKey) {
+        alert('Please enter a valid API Key.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/save_api_key', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ api_key: apiKey }),
+        });
+
+        const result = await response.json();
+        // document.getElementById('response').innerText = result.message;
+        alert('API Key sent to backend!');
+    } catch (error) {
+        console.log("no api key")
+        // document.getElementById('response').innerText = 'Error: ' + error.message;
+    }
+}
 
 function movePlayheadOG() {
     const containerWidth = beatContainer.offsetWidth; // Width of the container
@@ -1689,15 +1720,160 @@ function gatherTransitionData(formData) {
 }
 
 
+// function processTable() {
+//     const formData = gatherFormData();
+//     const transitionsData = gatherTransitionData(formData);
+//     console.log("form data: ", formData);
+//     console.log("transition data: ", transitionsData);
+
+//     if (formData == null || transitionsData == null) {
+//         return null;
+//     }
+//     let seed = document.getElementById("seed").value;
+//     document.getElementById('processedDataContainer').innerHTML = '';
+//     document.getElementById('processedDataContainer').style = "border: none;"
+//     seed = parseInt(seed, 10);
+//     if (isNaN(seed)) {
+//         seed = 868591112; // Default value
+//     }
+//     console.log(document.getElementById('audioFile').files[0].name)
+//     const data = {
+//         timestamps_scenes: significantPoints.map(point => point.toFixed(2)),
+//         form_data: formData,
+//         transitions_data: transitionsData,
+//         song_len: audioDuration,
+//         motion_mode: motion_mode,
+//         seed: seed,
+//         song_name: document.getElementById('audioFile').files[0].name
+//     };
+//     document.getElementById('processing').style = "display: block;"
+//     const loadingIndicator = document.getElementById("loadingIndicator_process");
+//     loadingIndicator.style.display = "block";
+//     // console.log(data);
+//     // console.log("RUNNING PROCESS TABLE");
+
+
+//     fetch('/process-data', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify(data)
+//     })
+//         .then(response => response.json())
+//         .then(data => {
+//             // console.log(data);
+//             // console.log("returned back");
+//             for (const [key, value] of Object.entries(data)) {
+//                 // console.log(`${key}: ${value}`);
+//                 if (key === 'output') {
+//                     // console.log(value);
+//                     window.open(value, '_blank');
+//                 }
+//             }
+//             let resultHTML = '';
+
+//             // if (data.animation_prompts) {
+//             //     resultHTML += `<h3>Animation Prompts:</h3><p>${data.animation_prompts}</p>`;
+//             // }
+
+//             if (data.motion_prompts) {
+//                 resultHTML += `<h3>Motion Strings:</h3>`;
+//                 for (const [motion, transitions] of Object.entries(data.motion_prompts)) {
+//                     resultHTML += `<p>${motion}: ${transitions.join(', ')}</p>`;
+//                 }
+//             }
+
+//             if (data.prompts) {
+//                 resultHTML += `<h3>Prompts:</h3><p>${data.prompts}</p>`;
+//             }
+
+//             if (data.output) {
+//                 resultHTML += `<h3>Output:</h3><p><a href="${data.output}" target="_blank">Click here to view the output</a></p>`;
+//             }
+
+//             document.getElementById('processedDataContainer').innerHTML = resultHTML;
+//             document.getElementById('processedDataContainer').style = "border: 2px solid black;"
+//         })
+//         .catch(error => {
+//             console.error('Error:', error);
+//         })
+//         .finally(() => {
+//             // Hide loading indicator after completion
+//             loadingIndicator.style.display = "none";
+//         });
+// }
+
+function checkJobStatus(jobId) {
+    const loadingIndicator = document.getElementById('loadingIndicator_process');
+    loadingIndicator.style.display = "block"; // Show loading indicator
+    console.log("check status")
+    // Check job status every 3 seconds (you can adjust this interval)
+    const interval = setInterval(() => {
+        fetch(`/check-job-status/${jobId}`, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(statusData => {
+            console.log('Job status:', statusData);
+            
+            // If the job is finished
+            if (statusData.status === 'finished') {
+                loadingIndicator.style.display = 'none';
+                console.log("FINISHED")
+                clearInterval(interval);  // Stop polling
+                
+                // Process the result when the job is done
+                handleJobResult(statusData);
+            }
+        })
+        .catch(error => {
+            loadingIndicator.style.display = 'none';
+            console.error('Error fetching job status:', error);
+        });
+    }, 3000);  // 3000 ms = 3 seconds
+}
+
+// Handle the job result
+function handleJobResult(statusData) {
+    const resultHTML = buildResultHTML(statusData.result);  // Assume the result is in 'statusData.result'
+    console.log("job completed")
+    // Display the results on the page
+    document.getElementById('processedDataContainer').innerHTML = resultHTML;
+    document.getElementById('processedDataContainer').style = "border: 2px solid black;";
+
+    // Hide loading indicator after completion
+    // const loadingIndicator = document.getElementById('loadingIndicator');
+    // loadingIndicator.style.display = "none";
+}
+
+// Build the HTML result
+function buildResultHTML(result) {
+    console.log("build result")
+    let resultHTML = '';
+
+    // Build HTML based on the result (adjust this according to your response data structure)
+    if (result.motion_prompts) {
+        resultHTML += `<h3>Motion Strings:</h3>`;
+        for (const [motion, transitions] of Object.entries(result.motion_prompts)) {
+            resultHTML += `<p>${motion}: ${transitions.join(', ')}</p>`;
+        }
+    }
+
+    if (result.prompts) {
+        resultHTML += `<h3>Prompts:</h3><p>${result.prompts}</p>`;
+    }
+
+    if (result.output) {
+        resultHTML += `<h3>Output:</h3><p><a href="${result.output}" target="_blank">Click here to view the output</a></p>`;
+    }
+
+    return resultHTML;
+}
+
 function processTable() {
     const formData = gatherFormData();
     const transitionsData = gatherTransitionData(formData);
-    console.log("form data: ", formData);
-    console.log("transition data: ", transitionsData);
-
-    if (formData == null || transitionsData == null) {
-        return null;
-    }
     let seed = document.getElementById("seed").value;
     document.getElementById('processedDataContainer').innerHTML = '';
     document.getElementById('processedDataContainer').style = "border: none;"
@@ -1705,15 +1881,14 @@ function processTable() {
     if (isNaN(seed)) {
         seed = 868591112; // Default value
     }
-    console.log(document.getElementById('audioFile').files[0].name)
+
     const data = {
         timestamps_scenes: significantPoints.map(point => point.toFixed(2)),
         form_data: formData,
         transitions_data: transitionsData,
         song_len: audioDuration,
         motion_mode: motion_mode,
-        seed: seed,
-        song_name: document.getElementById('audioFile').files[0].name
+        seed: seed
     };
     document.getElementById('processing').style = "display: block;"
     const loadingIndicator = document.getElementById("loadingIndicator_process");
@@ -1721,6 +1896,7 @@ function processTable() {
     // console.log(data);
     // console.log("RUNNING PROCESS TABLE");
 
+    console.log("process table")
 
     fetch('/process-data', {
         method: 'POST',
@@ -1731,45 +1907,52 @@ function processTable() {
     })
         .then(response => response.json())
         .then(data => {
-            // console.log(data);
-            // console.log("returned back");
-            for (const [key, value] of Object.entries(data)) {
-                // console.log(`${key}: ${value}`);
-                if (key === 'output') {
-                    // console.log(value);
-                    window.open(value, '_blank');
-                }
-            }
-            let resultHTML = '';
+            console.log('Job queued:', data);
+        
+            // Store the job ID
+            const jobId = data.job_id;
 
-            // if (data.animation_prompts) {
-            //     resultHTML += `<h3>Animation Prompts:</h3><p>${data.animation_prompts}</p>`;
+            // Call the function to check the job status
+            checkJobStatus(jobId);
+            console.log("done checking job status");
+            // console.log("returned back");
+            // for (const [key, value] of Object.entries(data)) {
+            //     // console.log(`${key}: ${value}`);
+            //     if (key === 'output') {
+            //         // console.log(value);
+            //         window.open(value, '_blank');
+            //     }
+            // }
+            // let resultHTML = '';
+
+            // // if (data.animation_prompts) {
+            // //     resultHTML += `<h3>Animation Prompts:</h3><p>${data.animation_prompts}</p>`;
+            // // }
+
+            // if (data.motion_prompts) {
+            //     resultHTML += `<h3>Motion Strings:</h3>`;
+            //     for (const [motion, transitions] of Object.entries(data.motion_prompts)) {
+            //         resultHTML += `<p>${motion}: ${transitions.join(', ')}</p>`;
+            //     }
             // }
 
-            if (data.motion_prompts) {
-                resultHTML += `<h3>Motion Strings:</h3>`;
-                for (const [motion, transitions] of Object.entries(data.motion_prompts)) {
-                    resultHTML += `<p>${motion}: ${transitions.join(', ')}</p>`;
-                }
-            }
+            // if (data.prompts) {
+            //     resultHTML += `<h3>Prompts:</h3><p>${data.prompts}</p>`;
+            // }
 
-            if (data.prompts) {
-                resultHTML += `<h3>Prompts:</h3><p>${data.prompts}</p>`;
-            }
+            // if (data.output) {
+            //     resultHTML += `<h3>Output:</h3><p><a href="${data.output}" target="_blank">Click here to view the output</a></p>`;
+            // }
 
-            if (data.output) {
-                resultHTML += `<h3>Output:</h3><p><a href="${data.output}" target="_blank">Click here to view the output</a></p>`;
-            }
-
-            document.getElementById('processedDataContainer').innerHTML = resultHTML;
-            document.getElementById('processedDataContainer').style = "border: 2px solid black;"
+            // document.getElementById('processedDataContainer').innerHTML = resultHTML;
+            // document.getElementById('processedDataContainer').style = "border: 2px solid black;"
         })
         .catch(error => {
             console.error('Error:', error);
         })
         .finally(() => {
             // Hide loading indicator after completion
-            loadingIndicator.style.display = "none";
+            // loadingIndicator.style.display = "none";
         });
 }
 
