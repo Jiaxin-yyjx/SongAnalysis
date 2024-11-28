@@ -132,13 +132,13 @@ def long_running_task(data):
     deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts, seed)
     
     # Run the API
-    # output = api.run(
-    #     "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
-    #     input=deforum_prompt
-    # )
-    output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
+    output = api.run(
+        "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
+        input=deforum_prompt
+    )
+    # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
 
-    time.sleep(9)
+    # time.sleep(9)
     # Compile the response
     response = {
         'timestamps_scenes': timestamps_scenes,

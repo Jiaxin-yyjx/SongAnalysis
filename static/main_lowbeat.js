@@ -2013,6 +2013,8 @@ function clearExistingData() {
     brainstormbox.style.display = 'none';
 
     nextButton.style.display = 'inline-block';
+    document.getElementById('processedDataContainer').innerHTML = '';
+    document.getElementById('processedDataContainer').style = "border: none;"
 
 }
 
