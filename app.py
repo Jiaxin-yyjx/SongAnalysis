@@ -304,8 +304,12 @@ def generate_initial():
     data = request.get_json()
     prompt = data.get('prompt', '')
     api_key = api_key_storage
-    print("API TOKEN? api_key, environ: ", api_key, os.getenv("LAB_DISCO_API_KEY"))
-    data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
+    if api_key and os.getenv("LAB_DISCO_API_KEY"):
+        data['api_key'] = api_key
+    else:
+        data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
+    print("API TOKEN? api_key,", api_key,". environ: ",  os.getenv("LAB_DISCO_API_KEY"))
+    print("API KEY ACTUALLY PASSED? ", data['api_key'])
 
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400

@@ -156,6 +156,7 @@ def generate_image_task(data):
     try:
         prompt = data.get('prompt', '')
         api_key = data.get('api_key', '')
+        print(f"USED API KEY GEN: {api_key}")
         api = replicate.Client(api_token=api_key)
 
         if not prompt:
@@ -237,9 +238,9 @@ def long_running_task(data):
         # api_key = os.getenv("REPLICATE_API_KEY")  # Store your API key in environment variables
         print("Long running running")
         api_key = data['api_key']
-        print("api key: ", api_key)
+        print(f"USED API KEY: {api_key}")
         api = replicate.Client(api_token=api_key)
-        print("API: ", api_key)
+        
         timestamps_scenes = data['timestamps_scenes']
         form_data = data['form_data']
         transitions_data = data['transitions_data']
@@ -277,7 +278,17 @@ def long_running_task(data):
         print("output: ", output)
         # time.sleep(12)
         # Compile the response
-        
+        if isinstance(output, str):  # It's a URL
+            final_output = output
+        elif hasattr(output, "url"):  # It's a FileOutput object with a URL
+            final_output = output.url
+        else:
+            raise ValueError(f"Unexpected output type: {type(output)}")
+                
+        try:
+            str_output = str(output)
+        except:
+            str_output = ""
         response = {
             'timestamps_scenes': timestamps_scenes,
             'form_data': form_data,
@@ -286,7 +297,8 @@ def long_running_task(data):
             'animation_prompts': animation_prompts,
             'motion_prompts': motion_strings,
             'prompts': prompts,
-            'output': output,
+            'output_url': final_output,
+            'original_output': str_output,
             'input_image_url': input_image_url
         }
         

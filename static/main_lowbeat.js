@@ -1891,8 +1891,8 @@ function buildResultHTML(result) {
     }
     
 
-    if (result.output) {
-        resultHTML += `<h3>Output:</h3><p><a href="${result.output}" target="_blank">Click here to view the output</a></p>`;
+    if (result.output_url) {
+        resultHTML += `<h3>Output:</h3><p><a href="${result.output_url}" target="_blank">Click here to view the output</a></p>`;
     }
 
     return resultHTML;
