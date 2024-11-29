@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, render_template
 import replicate
 from dotenv import load_dotenv
 from tasks import long_running_task, process_audio, generate_image_task
-from queue_config import queue
+from queue_config import queue, redis_conn
 from flask_cors import CORS
 from datetime import datetime
 
@@ -45,6 +45,8 @@ def save_api_key():
         print("Stored in environ before: ", os.getenv("LAB_DISCO_API_KEY"))
         os.environ["LAB_DISCO_API_KEY"] = api_key_storage
         print("Stored in environ after: ", os.getenv("LAB_DISCO_API_KEY"))
+        redis_conn.set("api_key", api_key)
+        print("Stored in redis: ", redis_conn.get("api_key").decode('utf-8'))
 
         return jsonify({'message': 'API Key saved successfully!'}), 200
     except Exception as e:
@@ -304,11 +306,16 @@ def generate_initial():
     data = request.get_json()
     prompt = data.get('prompt', '')
     api_key = api_key_storage
-    if api_key and os.getenv("LAB_DISCO_API_KEY"):
+    if api_key and os.getenv("LAB_DISCO_API_KEY") and redis_conn.get("api_key"):
+        print("input box chosen")
         data['api_key'] = api_key
+    elif redis_conn.get("api_key"):
+        print("redis chosen")
+        data['api_key'] = redis_conn.get("api_key").decode('utf-8')
     else:
+        print("os env chosen")
         data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
-    print("API TOKEN? api_key,", api_key,". environ: ",  os.getenv("LAB_DISCO_API_KEY"))
+    print("API TOKEN? api_key,", api_key,". environ: ",  os.getenv("LAB_DISCO_API_KEY"), ". redis: ", redis_conn.get("api_key").decode('utf-8'))
     print("API KEY ACTUALLY PASSED? ", data['api_key'])
 
     if not prompt:
@@ -1285,8 +1292,19 @@ def process_data():
     data = request.json
     print("PROCESS DATA")
     api_key = api_key_storage
-    print("API TOKEN? api key, os: ", api_key, os.getenv("LAB_DISCO_API_KEY"))
-    data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
+    # print("API TOKEN? api key, ", api_key,". os:", os.getenv("LAB_DISCO_API_KEY"))
+    # data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
+    if api_key and os.getenv("LAB_DISCO_API_KEY") and redis_conn.get("api_key"):
+        print("input box chosen process")
+        data['api_key'] = api_key
+    elif redis_conn.get("api_key"):
+        print("redis chosen process")
+        data['api_key'] = redis_conn.get("api_key").decode('utf-8')
+    else:
+        print("os env chosen process")
+        data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
+    print("PROCESS API TOKEN? api_key,", api_key,". environ: ",  os.getenv("LAB_DISCO_API_KEY"), ". redis: ", redis_conn.get("api_key").decode('utf-8'))
+    print("PROCESS API KEY ACTUALLY PASSED? ", data['api_key'])
     # data['enqueue_time'] = datetime.now()
     # api = replicate.Client(api_token=api_key)
     print("ABOUT TO ENQUEUE")
