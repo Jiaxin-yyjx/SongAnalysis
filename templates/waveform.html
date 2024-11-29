@@ -18,10 +18,12 @@
 <!-- <button id="deleteButton">Delete Selected Label</button> -->
 
 </br>
+<!-- <input type="password" id="api_key" placeholder="Enter API Key"> -->
 <input type="text" id="api_key" placeholder="Enter API Key">
+
 <button onclick="sendApiKey()">Save</button>
 <div id="headers" style="display: flex; flex-wrap: wrap; gap: 10px;">
-    <input type="file" id="audioFile" accept=".m4a, .mp3, .wav">
+    <input type="file" id="audioFile" accept=".m4a, .mp3, .wav" disabled>
     <button id="addNewInterval" style="display: none;" onclick="addNewInterval()">Add Interval</button>
     <button onclick="delete_intervals()" style="display: none;" id="deleteButton">Delete Intervals</button>
     <button id="next-transition" style="display: none; background-color: rgb(230, 147, 147);"

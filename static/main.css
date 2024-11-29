@@ -668,3 +668,7 @@ select {
         transform: rotate(360deg);
     }
 }
+
+#api_key {
+    border: 5px solid red
+}
