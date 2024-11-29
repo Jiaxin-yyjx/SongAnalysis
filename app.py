@@ -42,6 +42,9 @@ def save_api_key():
         # Store the API key (you can replace this with database/file storage)
         api_key_storage = api_key
         print("API KEY: ", api_key_storage)
+        print("Stored in environ before: ", os.getenv("LAB_DISCO_API_KEY"))
+        os.environ["LAB_DISCO_API_KEY"] = api_key_storage
+        print("Stored in environ after: ", os.getenv("LAB_DISCO_API_KEY"))
 
         return jsonify({'message': 'API Key saved successfully!'}), 200
     except Exception as e:
@@ -161,8 +164,8 @@ def upload_audio():
                         })
 
         duration = librosa.get_duration(y=y, sr=sr)
-        print("BEATS: ", beat_times[0:5])  # Change to beat_times2 for accurate print
-        print("ALIGNED: ", aligned_onsets[0:15])
+        # print("BEATS: ", beat_times[0:5])  # Change to beat_times2 for accurate print
+        # print("ALIGNED: ", aligned_onsets[0:15])
 
         return jsonify({
             "success": True,
@@ -301,8 +304,8 @@ def generate_initial():
     data = request.get_json()
     prompt = data.get('prompt', '')
     api_key = api_key_storage
-    print("API TOKEN?: ", api_key)
-    data['api_key'] = api_key 
+    print("API TOKEN? api_key, environ: ", api_key, os.getenv("LAB_DISCO_API_KEY"))
+    data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
 
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400
@@ -1278,8 +1281,8 @@ def process_data():
     data = request.json
     print("PROCESS DATA")
     api_key = api_key_storage
-    print("API TOKEN?: ", api_key)
-    data['api_key'] = api_key 
+    print("API TOKEN? api key, os: ", api_key, os.getenv("LAB_DISCO_API_KEY"))
+    data['api_key'] = os.getenv("LAB_DISCO_API_KEY")
     # data['enqueue_time'] = datetime.now()
     # api = replicate.Client(api_token=api_key)
     print("ABOUT TO ENQUEUE")

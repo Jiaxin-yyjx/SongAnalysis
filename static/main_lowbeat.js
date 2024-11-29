@@ -1826,6 +1826,13 @@ function checkJobStatus(jobId) {
                 // Process the result when the job is done
                 handleJobResult(statusData);
             }
+            else if (statusData.status === 'failed') {
+                // If the job has failed, stop polling and display an error
+                loadingIndicator.style.display = 'none';
+                console.error("Job failed:", statusData.error || "Unknown error");
+                alert(`Job failed: ${statusData.error || "An unknown error occurred"}`);
+                clearInterval(interval); // Stop polling
+            }
         })
         .catch(error => {
             loadingIndicator.style.display = 'none';
@@ -1842,6 +1849,7 @@ function handleJobResult(statusData) {
         alert(`Error: ${statusData.result.error}. Check API dashboard and try again.`);
         return; // Exit the function to prevent further processing
     }
+    console.log("result: ", statusData.result)
     const resultHTML = buildResultHTML(statusData.result);  // Assume the result is in 'statusData.result'
     console.log("job completed")
     // Display the results on the page

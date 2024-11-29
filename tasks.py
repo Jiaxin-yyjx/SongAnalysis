@@ -272,11 +272,12 @@ def long_running_task(data):
             input=deforum_prompt
         )
 
-        print("output: ", output)
+        
         # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
-
+        print("output: ", output)
         # time.sleep(12)
         # Compile the response
+        
         response = {
             'timestamps_scenes': timestamps_scenes,
             'form_data': form_data,
@@ -288,6 +289,19 @@ def long_running_task(data):
             'output': output,
             'input_image_url': input_image_url
         }
+        
+        print("response: ", response)
+        for key in ['timestamps_scenes', 'form_data', 'transitions_data']:
+            response[key] = response.get(key, None)
+            if isinstance(response[key], (list, dict)):
+                continue
+            elif isinstance(response[key], (np.ndarray, set)):
+                response[key] = list(response[key])  # Convert arrays or sets to lists
+            elif isinstance(response[key], datetime):
+                response[key] = response[key].isoformat()  # Convert datetime to string
+            else:
+                response[key] = str(response[key])  # Fallback: Convert to string
+        print("response after 'fix': ", response)
         return {"status": "success", "output": response}
     except JobTimeoutException:
         # Log or handle the timeout exception here
