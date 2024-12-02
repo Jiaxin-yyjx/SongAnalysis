@@ -18,7 +18,7 @@ from helpers import (  # Adjust the import paths as needed
     create_deforum_prompt
 )
 
-init_image = "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg"
+
 
 
 # Redis connection
@@ -156,6 +156,7 @@ def generate_image_task(data):
     try:
         prompt = data.get('prompt', '')
         api_key = data.get('api_key', '')
+        print(f"USED API KEY GEN: {api_key}")
         api = replicate.Client(api_token=api_key)
 
         if not prompt:
@@ -237,15 +238,16 @@ def long_running_task(data):
         # api_key = os.getenv("REPLICATE_API_KEY")  # Store your API key in environment variables
         print("Long running running")
         api_key = data['api_key']
+        print(f"USED API KEY: {api_key}")
         api = replicate.Client(api_token=api_key)
-        print("API: ", api_key)
+        
         timestamps_scenes = data['timestamps_scenes']
         form_data = data['form_data']
         transitions_data = data['transitions_data']
         song_len = data['song_len']
         motion_mode = data['motion_mode']
         seed = data['seed']
-        input_image_url = data['input_image_url']
+        input_image_url = data.get('input_image_url',"https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg")
 
         # Processing the data
         song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data = parse_input_data(form_data, transitions_data, song_len)
@@ -259,8 +261,9 @@ def long_running_task(data):
 
         # Create the Deforum prompt
         print("INIT IMAGE TO BE PASSED IN: ", input_image_url)
-        if not input_image_url:
-            input_image_url = init_image
+        if not input_image_url or str(input_image_url).lower() == "none":
+            print("No valid input image URL specified. Using default.")
+            input_image_url = "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg"
         print("INIT IMAGE THAT IS PASSED IN: ", input_image_url)
         deforum_prompt = create_deforum_prompt(motion_strings, final_anim_frames, motion_mode, prompts, seed, input_image_url)
         print("deforum prompt: ", deforum_prompt)
@@ -269,10 +272,23 @@ def long_running_task(data):
             "deforum-art/deforum-stable-diffusion:1a98303504c7d866d2b198bae0b03237eab82edc1491a5306895d12b0021d6f6",
             input=deforum_prompt
         )
-        # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
 
+        
+        # output = "https://replicate.delivery/yhqm/u7FcIvDd32bjK5ccA5v0FmQ8LesqmftC6MrUbrRMTZECkyPTA/out.mp4"
+        print("output: ", output)
         # time.sleep(12)
         # Compile the response
+        if isinstance(output, str):  # It's a URL
+            final_output = output
+        elif hasattr(output, "url"):  # It's a FileOutput object with a URL
+            final_output = output.url
+        else:
+            raise ValueError(f"Unexpected output type: {type(output)}")
+                
+        try:
+            str_output = str(output)
+        except:
+            str_output = ""
         response = {
             'timestamps_scenes': timestamps_scenes,
             'form_data': form_data,
@@ -281,9 +297,23 @@ def long_running_task(data):
             'animation_prompts': animation_prompts,
             'motion_prompts': motion_strings,
             'prompts': prompts,
-            'output': output,
-            'input_image_url': init_image
+            'output_url': final_output,
+            'original_output': str_output,
+            'input_image_url': input_image_url
         }
+        
+        print("response: ", response)
+        for key in ['timestamps_scenes', 'form_data', 'transitions_data']:
+            response[key] = response.get(key, None)
+            if isinstance(response[key], (list, dict)):
+                continue
+            elif isinstance(response[key], (np.ndarray, set)):
+                response[key] = list(response[key])  # Convert arrays or sets to lists
+            elif isinstance(response[key], datetime):
+                response[key] = response[key].isoformat()  # Convert datetime to string
+            else:
+                response[key] = str(response[key])  # Fallback: Convert to string
+        print("response after 'fix': ", response)
         return {"status": "success", "output": response}
     except JobTimeoutException:
         # Log or handle the timeout exception here

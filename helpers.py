@@ -8,7 +8,7 @@ motion_magnitudes = {
     "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
     "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
     "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
-    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 50},
     "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
     "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
     "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
@@ -412,7 +412,9 @@ def generate_prompt_completion(client, prompt):
 def create_deforum_prompt(motion_data, final_anim_frames, motion_mode, prompts,seed, init_image):
     # print("HERE ", ', '.join(motion_data['rotation_3d_y']))
     # print(motion_data['rotation_3d_y'][0:-1])
-    print("INIT IMAGE IN PROMPT")
+    print("INIT IMAGE IN PROMPT: ", init_image)
+    if not init_image or str(init_image).lower() == "none":
+            init_image = "https://raw.githubusercontent.com/ct3008/ct3008.github.io/main/images/isee1.jpeg"
     input={
         "fov": 40,
         "fps": 15,

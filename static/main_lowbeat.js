@@ -116,6 +116,7 @@ async function sendApiKey() {
         });
 
         const result = await response.json();
+        document.getElementById("api_key").style.border = "1px solid black";
         // document.getElementById('response').innerText = result.message;
         alert('API Key sent to backend!');
     } catch (error) {
@@ -1511,7 +1512,7 @@ function fillDefaults() {
             else if (input.id.includes('motion_trans')) {
                 if (!input.value && motion_mode === "3D" || motion_mode === "3D" && (input.value.includes("spin") || input.value.includes("pan"))) {
                     if (endTime == audioDuration) {
-                        input.value = 'rotate_ccw';
+                        input.value = 'rotate_cw';
                     } else {
                         input.value = 'rotate_right';
                     }
@@ -1826,6 +1827,13 @@ function checkJobStatus(jobId) {
                 // Process the result when the job is done
                 handleJobResult(statusData);
             }
+            else if (statusData.status === 'failed') {
+                // If the job has failed, stop polling and display an error
+                loadingIndicator.style.display = 'none';
+                console.error("Job failed:", statusData.error || "Unknown error");
+                alert(`Job failed: ${statusData.error || "An unknown error occurred"}`);
+                clearInterval(interval); // Stop polling
+            }
         })
         .catch(error => {
             loadingIndicator.style.display = 'none';
@@ -1842,6 +1850,7 @@ function handleJobResult(statusData) {
         alert(`Error: ${statusData.result.error}. Check API dashboard and try again.`);
         return; // Exit the function to prevent further processing
     }
+    console.log("result: ", statusData.result)
     const resultHTML = buildResultHTML(statusData.result);  // Assume the result is in 'statusData.result'
     console.log("job completed")
     // Display the results on the page
@@ -1878,15 +1887,13 @@ function buildResultHTML(result) {
         resultHTML += `<h3>Prompts:</h3><p>${result.prompts}</p>`;
     }
 
-    if (backgroundImageUrl) {
-        resultHTML += `<h3>Initial Image Used:</h3><p><a href="${backgroundImageUrl}" target="_blank">${backgroundImageUrl}</a></p>`;
-    } else {
+    if (result.input_image_url) {
         resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
     }
     
 
-    if (result.output) {
-        resultHTML += `<h3>Output:</h3><p><a href="${result.output}" target="_blank">Click here to view the output</a></p>`;
+    if (result.output_url) {
+        resultHTML += `<h3>Output:</h3><p><a href="${result.output_url}" target="_blank">Click here to view the output</a></p>`;
     }
 
     return resultHTML;
@@ -2055,10 +2062,26 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("file: " + audioFileInput)
     let fileSelected = false;
     let selectedFile = null;
-
+    
+    function validateApiKey() {
+        // Get the value of the API key field
+        const apiKey = document.getElementById("api_key").value;
+        const fileInput = document.getElementById("audioFile");
+        
+        if (apiKey === '') {
+            alert("Please enter an API key");
+            fileInput.disabled = true;  // Disable file input
+        } else {
+            fileInput.disabled = false;  // Enable file input
+        }
+    }
+    
+    // Call this function when the API key input changes
+    document.getElementById("api_key").addEventListener("input", validateApiKey);
 
     // Listen for the file selection event
     audioFileInput.addEventListener('change', function (event) {
+        
         console.log("change")
         selectedFile = document.getElementById('audioFile').files[0];
         console.log(selectedFile)
@@ -2255,6 +2278,7 @@ function audioZoom() {
 }
 
 function processAudio() {
+    
     tablemade = false;
     const fileInput = document.getElementById('audioFile');
     const play_button = document.getElementById("playPauseButton")
@@ -3685,36 +3709,36 @@ function showSignificantPoints() {
 
 
 
-function getLyrics() {
-    const fileInput = document.getElementById('audioFile');
-    if (fileInput.files.length === 0) {
-        alert("Please select an audio file first.");
-        return;
-    }
+// function getLyrics() {
+//     const fileInput = document.getElementById('audioFile');
+//     if (fileInput.files.length === 0) {
+//         alert("Please select an audio file first.");
+//         return;
+//     }
 
-    const formData = new FormData();
-    formData.append('audioFile', fileInput.files[0]);
+//     const formData = new FormData();
+//     formData.append('audioFile', fileInput.files[0]);
 
-    fetch('/upload_audio', {
-        method: 'POST',
-        body: formData
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('outputContainer').textContent = JSON.stringify(data.output, null, 2);
-                lowEnergyBeats = data.low_energy_timestamps; // Update the global variable
-                // console.log("LOW ENERGY: " + lowEnergyBeats); // Log for debugging
-                updateUIWithLowEnergyBeats(); // Example function call
-            } else {
-                document.getElementById('outputContainer').textContent = 'Error: ' + data.error;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('outputContainer').textContent = 'Failed to fetch data.';
-        });
-}
+//     fetch('/upload_audio', {
+//         method: 'POST',
+//         body: formData
+//     })
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.success) {
+//                 document.getElementById('outputContainer').textContent = JSON.stringify(data.output, null, 2);
+//                 lowEnergyBeats = data.low_energy_timestamps; // Update the global variable
+//                 // console.log("LOW ENERGY: " + lowEnergyBeats); // Log for debugging
+//                 updateUIWithLowEnergyBeats(); // Example function call
+//             } else {
+//                 document.getElementById('outputContainer').textContent = 'Error: ' + data.error;
+//             }
+//         })
+//         .catch(error => {
+//             console.error('Error:', error);
+//             document.getElementById('outputContainer').textContent = 'Failed to fetch data.';
+//         });
+// }
 
 function toggleMotion() {
     const button = document.getElementById("toggleMotionButton");
