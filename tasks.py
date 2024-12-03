@@ -179,23 +179,34 @@ def generate_image_task(data):
         #     timeout=600
         # )
 
-        output = api.run(
-            "stability-ai/stable-diffusion-3.5-large",
+        # output = api.run(
+        #     "stability-ai/stable-diffusion-3.5-large",
+        #     input={
+        #         "prompt": prompt,
+        #         "width": 768,
+        #         "height": 768,
+        #         "num_outputs": 1,
+        #         "guidance_scale": 7.5,
+        #         "apply_watermark": True,
+        #         "negative_prompt": "worst quality, low quality",
+        #         "prompt_strength": 0.8,
+        #         "num_inference_steps": 40
+        #     }
+        # )
+        
+        output = replicate.run(
+            "black-forest-labs/flux-schnell",
             input={
                 "prompt": prompt,
-                "width": 768,
-                "height": 768,
+                "go_fast": True,
+                "megapixels": "1",
                 "num_outputs": 1,
-                "guidance_scale": 7.5,
-                "apply_watermark": True,
-                "negative_prompt": "worst quality, low quality",
-                "prompt_strength": 0.8,
-                "num_inference_steps": 40
+                "aspect_ratio": "1:1",
+                "output_format": "webp",
+                "output_quality": 80,
+                "num_inference_steps": 10
             }
         )
-
-
-
         # Simulate a long-running process, like calling an API
         # output = ["https://replicate.delivery/xezq/e7L0heZDcQkglUAxvUGnkXPE5n0ar6eRPlOrdj57th9pFQrnA/out-0.webp"]
         # output = ["https://png.pngtree.com/png-clipart/20230512/original/pngtree-isolated-front-view-cat-on-white-background-png-image_9158426.png"]
