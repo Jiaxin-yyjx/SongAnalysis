@@ -42,7 +42,7 @@ def save_api_key():
         # Store the API key (you can replace this with database/file storage)
         api_key_storage = api_key
         print("API KEY: ", api_key_storage)
-        print("Stored in environ before: ", os.getenv("LAB_DISCO_API_KEY"))
+        # print("Stored in environ before: ", os.getenv("LAB_DISCO_API_KEY"))
         os.environ["LAB_DISCO_API_KEY"] = api_key_storage
         print("Stored in environ after: ", os.getenv("LAB_DISCO_API_KEY"))
         redis_conn.set("api_key", api_key)
@@ -56,7 +56,7 @@ def save_api_key():
 motion_magnitudes = {
     "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 10, "vstrong": 20},
     "zoom_out": {"none": 1.00, "weak": -0.5, "normal": -1.04, "strong": -10, "vstrong": -20},
-    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 20},
+    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
     "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
     "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
     "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
