@@ -16,12 +16,12 @@ import cloudinary.uploader
 
 CLOUDINARY_URL = 'cloudinary://851777568929886:GJN-qDx1C7idDTO4SZ92FuD3mI0@hqxlqewng'
 cloudinary.config(
-    # cloud_name=os.environ['CLOUDINARY_URL'].split('@')[1],
-    # api_key=os.environ['CLOUDINARY_URL'].split(':')[1][2:],
-    # api_secret=os.environ['CLOUDINARY_URL'].split(':')[2].split('@')[0],
-    cloud_name=CLOUDINARY_URL.split('@')[1],
-    api_key=CLOUDINARY_URL.split(':')[1][2:],
-    api_secret=CLOUDINARY_URL.split(':')[2].split('@')[0],
+    cloud_name=os.environ['CLOUDINARY_URL'].split('@')[1],
+    api_key=os.environ['CLOUDINARY_URL'].split(':')[1][2:],
+    api_secret=os.environ['CLOUDINARY_URL'].split(':')[2].split('@')[0],
+    # cloud_name=CLOUDINARY_URL.split('@')[1],
+    # api_key=CLOUDINARY_URL.split(':')[1][2:],
+    # api_secret=CLOUDINARY_URL.split(':')[2].split('@')[0],
 )
 
 load_dotenv()
