@@ -43,7 +43,15 @@
         <div class="spinner"></div>
     </div>
 </div>
-<button id="playPauseButton" style="display: none; size: 25px">▶</button>
+<div id="playbuttons" style="display: flex; gap: 10px; align-items: center;">
+    <button id="playStartButton" style="display: none;" title="Play from Start">
+        <img src="./static/play_start.png" alt="Play from Start" style="width: 25px; height: 25px;">
+    </button>
+    <button id="playPauseButton" style="display: none;">▶</button>
+    
+</div>
+
+
 <!-- <div id="slider" style="display: none;">
     <label for="zoomSlider">Zoom Level:</label>
     <input type="range" id="zoomSlider" min="50" max="400" value="50">
@@ -93,92 +101,132 @@
 
             <button id="toggleMotionButton" style="display: none;" onclick="toggleMotion()">3D Motion</button>
             <hr>
-            <!-- Vibe Input -->
-            <div id="vibeBox" style="margin-bottom: 10px; display: none;">
+            <div id="vibeBox">
                 <label for="vibeInput">Vibe: </label>
-                <input type="text" id="vibeInput" placeholder="Enter vibe (e.g., calm)" list="vibeOptions">
-                <datalist id="vibeOptions">
-                    <option value="calm">
-                    <option value="epic">
-                    <option value="aggressive">
-                    <option value="chill">
-                    <option value="dark">
-                    <option value="energetic">
-                    <option value="ethereal">
-                    <option value="happy">
-                    <option value="romantic">
-                    <option value="sad">
-                    <option value="scary">
-                    <option value="sexy">
-                    <option value="uplifting">
-                </datalist>
-            </div>
-            <hr>
-            <!-- Imagery Input -->
-            <div id="imageryBox" style="margin-bottom: 10px; display: none;">
-                <label for="imageryInput">Imagery:</label>
-                <input type="text" id="imageryInput" placeholder="Enter imagery (e.g., flowing waves)"
-                    list="imageryOptions">
                 <br>
-                <a href="https://scientific-chili-aec.notion.site/13e34a2bba7580b0803ded971b20a0a7?pvs=4"
-                    target="_blank" style="margin-left: 10px;">See imagery examples</a>
-                <datalist id="imageryOptions">
-                    <option value="blossoming flower">
-                    <option value="chaotic intertwining lines">
-                    <option value="flowing waves">
-                    <option value="starry night">
-                    <option value="curvilinear intertwined circles">
-                    <option value="whirling lines">
-                    <option value="vibrant kaleidoscope of colors">
-                    <option value="interstellar light trails">
-                    <option value="abstract fractal patterns">
-                    <option value="dissolving geometric shards">
-                    <option value="diffused cosmic mists">
-                    <option value="translucent ripple effects">
-                </datalist>
-            </div>
+                <input 
+                    type="text" 
+                    id="vibeInput" 
+                    placeholder="Enter vibe (e.g., calm)" 
+                    list="vibeOptions" 
+                    autocomplete="off" 
+                >
+                <button id="dropdownButton">
+                    ▼
+                </button>
+                <ul id="vibeDropdown">
+                    <li style="padding: 5px; cursor: pointer;" data-value="calm">Calm</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="epic">Epic</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="aggressive">Aggressive</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="chill">Chill</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="dark">Dark</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="energetic">Energetic</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="ethereal">Ethereal</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="happy">Happy</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="romantic">Romantic</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="sad">Sad</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="scary">Scary</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="sexy">Sexy</li>
+                    <li style="padding: 5px; cursor: pointer;" data-value="uplifting">Uplifting</li>
+                </ul>
+            </div> 
             <hr>
-            <!-- Texture Input -->
-            <div id="textureBox" style="margin-bottom: 10px; display: none;">
-                <label for="textureInput">Texture:</label>
-                <input type="text" id="textureInput" placeholder="Enter texture (e.g., painting)" list="textureOptions">
+            <div id="imageryBox">
+                <label for="imageryInput">Imagery: </label>
                 <br>
-                <a href="https://scientific-chili-aec.notion.site/Texture-Samples-13e34a2bba7580489108f775af821dd0?pvs=4"
-                    target="_blank" style="margin-left: 10px;">See texture examples</a>
-                <datalist id="textureOptions">
-                    <option value="painting">
-                    <option value="calligraphy brush ink stroke">
-                    <option value="pastel watercolor on canvas">
-                    <option value="charcoal drawing">
-                    <option value="pencil drawing">
-                    <option value="impasto palette knife painting">
-                    <option value="mosaic">
-                    <option value="jagged/irregular">
-                    <option value="rubbed graphite on paper">
-                    <option value="digital glitch">
-                    <option value="splattered paint">
-                    <option value="graffiti">
-                    <option value="ink blots">
-                </datalist>
-            </div>
+                <input 
+                    type="text" 
+                    id="imageryInput" 
+                    placeholder="Enter imagery (e.g., flowing waves)"
+                    list="imageryOptions" 
+                    autocomplete="off" 
+                >
+                
+                <button id="imageryDropdownButton">
+                    ▼
+                </button>
+                <ul id="imageryDropdown">
+                    <li style="padding: 5px; cursor: pointer;">Blossoming Flower</li>
+                    <li style="padding: 5px; cursor: pointer;">Chaotic Intertwining Lines</li>
+                    <li style="padding: 5px; cursor: pointer;">Flowing Waves</li>
+                    <li style="padding: 5px; cursor: pointer;">Starry Night</li>
+                    <li style="padding: 5px; cursor: pointer;">Curvilinear Intertwined Circles</li>
+                    <li style="padding: 5px; cursor: pointer;">Whirling Lines</li>
+                    <li style="padding: 5px; cursor: pointer;">Vibrant Kaleidoscope of Colors</li>
+                    <li style="padding: 5px; cursor: pointer;">Interstellar Light Trails</li>
+                    <li style="padding: 5px; cursor: pointer;">Abstract Fractal Patterns</li>
+                    <li style="padding: 5px; cursor: pointer;">Dissolving Geometric Shards</li>
+                    <li style="padding: 5px; cursor: pointer;">Diffused Cosmic Mists</li>
+                    <li style="padding: 5px; cursor: pointer;">Translucent Ripple Effects</li>
+                </ul>
+                <!-- <br>
+                <a href="https://scientific-chili-aec.notion.site/13e34a2bba7580b0803ded971b20a0a7?pvs=4" target="_blank" style="margin-left: 10px;">See imagery examples</a> -->
+            </div> 
+            
             <hr>
-            <!-- Color Input -->
-            <div id="colorBox" style="margin-bottom: 10px; display: none;">
-                <label for="colorInput">Color:</label>
-                <input type="text" id="colorInput" placeholder="Enter color (e.g., sky blue)" list="colorOptions">
+            <div id="textureBox">
+                <label for="textureInput">Texture: </label>
                 <br>
-                <button id="colorPickerButton">🎨</button>
-
-                <input type="color" id="colorPicker" style="display: none; align-items: center;">
-
-                <datalist id="colorOptions">
-                    <option value="black/white">
-                    <option value="myriad of color">
-                    <option value="sky blue (#00BFFF)">
-                    <option value="fiery red (#db0804)">
-                    <option value="cherry blossom pink (#FFB7C5)">
-                    <option value="amber (#FFBF00)">
-                </datalist>
+                <input 
+                    type="text" 
+                    id="textureInput" 
+                    placeholder="Enter texture (e.g., painting)"
+                    list="textureOptions" 
+                    autocomplete="off" 
+                >
+                
+                <button id="textureDropdownButton">
+                    ▼
+                </button>
+                <ul id="textureDropdown">
+                    <li style="padding: 5px; cursor: pointer;">Painting</li>
+                    <li style="padding: 5px; cursor: pointer;">Calligraphy Brush Ink Stroke</li>
+                    <li style="padding: 5px; cursor: pointer;">Pastel Watercolor on Canvas</li>
+                    <li style="padding: 5px; cursor: pointer;">Charcoal Drawing</li>
+                    <li style="padding: 5px; cursor: pointer;">Pencil Drawing</li>
+                    <li style="padding: 5px; cursor: pointer;">Impasto Palette Knife Painting</li>
+                    <li style="padding: 5px; cursor: pointer;">Mosaic</li>
+                    <li style="padding: 5px; cursor: pointer;">Jagged/Irregular</li>
+                    <li style="padding: 5px; cursor: pointer;">Rubbed Graphite on Paper</li>
+                    <li style="padding: 5px; cursor: pointer;">Digital Glitch</li>
+                    <li style="padding: 5px; cursor: pointer;">Splattered Paint</li>
+                    <li style="padding: 5px; cursor: pointer;">Graffiti</li>
+                    <li style="padding: 5px; cursor: pointer;">Ink Blots</li>
+                </ul>
+                <!-- <br>
+                <a href="https://scientific-chili-aec.notion.site/Texture-Samples-13e34a2bba7580489108f775af821dd0?pvs=4" target="_blank" style="margin-left: 10px;">See texture examples</a> -->
+            </div> 
+            
+            <hr>
+            <div id="colorBox" style="margin-bottom: 10px; display: none; flex-wrap: wrap; align-items: center; gap: 10px; position: relative;">
+                <label for="colorInput">Color: </label>
+                <br>
+                <input 
+                    type="text" 
+                    id="colorInput" 
+                    placeholder="Enter color (e.g., sky blue)"
+                    list="colorOptions" 
+                    autocomplete="off" 
+                >
+                <button id="colorDropdownButton" style="padding: 5px; border: 1px solid #ccc; background-color: #fff; cursor: pointer;">
+                    ▼
+                </button>
+                <ul id="colorDropdown" style="display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #ccc; border-radius: 4px; list-style: none; padding: 5px 0; width: 100%; max-height: 150px; overflow-y: auto; z-index: 1000;">
+                    <li style="padding: 5px; cursor: pointer;">Black/White</li>
+                    <li style="padding: 5px; cursor: pointer;">Myriad of Color</li>
+                    <li style="padding: 5px; cursor: pointer;">Sky Blue (#00BFFF)</li>
+                    <li style="padding: 5px; cursor: pointer;">Fiery Red (#db0804)</li>
+                    <li style="padding: 5px; cursor: pointer;">Cherry Blossom Pink (#FFB7C5)</li>
+                    <li style="padding: 5px; cursor: pointer;">Amber (#FFBF00)</li>
+                </ul>
+            
+                <!-- Color Picker on the next line -->
+                <div style="width: 100%; margin-top: 10px;">
+                    <button id="colorPickerButton" style="padding: 5px; border: 1px solid #ccc; background-color: #fff; cursor: pointer;">
+                        🎨
+                    </button>
+                    <input type="color" id="colorPicker" style="display: none;">
+                </div>
             </div>
             <hr>
             <button id="fill-defaults" style="display: none;" onclick="fillDefaultsTemp()">Fill With Defaults</button>
@@ -188,7 +236,7 @@
         <div id="image_examples"
             style="width: 70%; display: none; border: 1px solid #ddd; padding: 30px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1);">
             <h3>Image Gallery</h3>
-            <label for="imagery-select">Choose an Imagery:</label>
+            <label for="imagery-select">View Imagery and Texture Examples:</label>
             <select id="imagery-select">
                 <option value="">-- Select an Imagery --</option>
                 <option value="chaotic_intertwining_lines">Chaotic Intertwining Lines</option>

@@ -319,12 +319,174 @@ audio {
 
 /* Default fills */
 
-#vibeInput,
+/* #vibeInput,
 #colorInput {
     padding: 5px;
     margin: 10px 0;
     width: 200px;
 }
+
+#vibeBox {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#vibeInput {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+}
+
+#vibeDropdown {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#dropdownButton {
+    transition: visibility 0.2s ease;
+}
+
+#vibeDropdown li:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+} */
+
+
+
+/* General input field styles for vibe, color, imagery, and texture */
+/* #vibeInput,
+#colorInput,
+#imageryInput,
+#textureInput {
+    padding: 5px;
+    margin: 10px 0;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#vibeBox,
+#colorBox,
+#imageryBox,
+#textureBox {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+#dropdownButton,
+#colorDropdownButton,
+#imageryDropdownButton,
+#textureDropdownButton {
+    padding: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: visibility 0.2s ease;
+}
+
+#vibeDropdown,
+#colorDropdown,
+#imageryDropdown,
+#textureDropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    list-style: none;
+    padding: 5px 0;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+#vibeDropdown li:hover,
+#colorDropdown li:hover,
+#imageryDropdown li:hover,
+#textureDropdown li:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+#vibeInput,
+#colorInput,
+#imageryInput,
+#textureInput {
+    flex: 1;
+} */
+
+
+/* General styling for input fields and dropdowns */
+#vibeInput, #colorInput, #imageryInput, #textureInput {
+    padding: 5px;
+    margin: 10px 0;
+    width: 80%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Box styles for vibe, color, imagery, and dropdown containers */
+#vibeBox, #imageryBox, #colorBox, #textureBox {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+/* Style for the dropdown button */
+#dropdownButton, #imageryDropdownButton, #colorDropdownButton, #textureDropdownButton {
+    /* cursor: pointer;
+    transition: visibility 0.2s ease; */
+    padding: 5px; 
+    border: 1px solid #ccc; 
+    background-color: #fff; 
+    cursor: pointer;
+}
+
+/* Dropdown list styling */
+#vibeDropdown, #imageryDropdown, #colorDropdown, #textureDropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    list-style: none;
+    padding: 5px 0;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+/* Hover effect for dropdown list items */
+#vibeDropdown li:hover,
+#imageryDropdown li:hover,
+#colorDropdown li:hover,
+#textureDropdown li:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Additional styles for specific inputs */
+#vibeInput, #imageryInput, #colorInput, #textureInput {
+    flex: 1;
+    padding: 5px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px;
+}
+
+
 
 #fillDefaultsButton {
     padding: 8px 15px;
@@ -385,7 +547,7 @@ audio {
     /* Center icon inside button */
     align-items: center;
     background-color: #f0f0f0;
-    margin-left: 50px;
+    margin-left: 0px !important;
     /* border: 1px solid #ddd; */
     border-radius: 5px;
     cursor: pointer;
@@ -396,11 +558,11 @@ audio {
     width: 150px;
     height: 50px;
     display: flex;
-    justify-content: center;
+    /* justify-content: center; */
     /* Center icon inside button */
     align-items: center;
     background-color: rgb(230, 147, 147);
-    margin-left: 50px;
+    /* margin-left: 50px; */
     /* border: 1px solid #ddd; */
     border-radius: 5px;
     cursor: pointer;
@@ -514,7 +676,36 @@ audio {
 
 #playPauseButton {
     margin-top: 10px;
+    size: 28px;
 }
+
+#playPauseButton:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* Adds a subtle hover effect */
+}
+
+#playStartButton {
+    cursor: pointer; /* Makes it clear it's clickable */
+    /* border-radius: 5px;  */
+    background-color: #efefef; 
+    border: 2px solid black;
+    margin-top: 10px;
+    max-width: 30px;
+    max-height: 31px;
+    size: 30px; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 0;
+}
+
+#playStartButton img {
+    max-width: 25px;
+    max-height: 25px;
+}
+
+#playStartButton:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* Adds a subtle hover effect */
+}
+
 
 /* select and drag image into initial image box */
 .selectable-image {
@@ -672,3 +863,5 @@ select {
 #api_key {
     border: 5px solid red
 }
+
+

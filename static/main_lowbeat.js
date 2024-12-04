@@ -118,7 +118,7 @@ async function sendApiKey() {
         const result = await response.json();
         document.getElementById("api_key").style.border = "1px solid black";
         // document.getElementById('response').innerText = result.message;
-        alert('API Key sent to backend!');
+        // alert('API Key sent to backend!');
     } catch (error) {
         console.log("no api key")
         // document.getElementById('response').innerText = 'Error: ' + error.message;
@@ -443,6 +443,7 @@ function show_default_boxes() {
 
     // Show color picker when button is clicked
     colorPickerButton.addEventListener("click", function () {
+        console.log("hello color click")
         updateColorPickerFromInput();  // Update color picker to match the current color input
         colorPicker.click();           // Trigger the color picker
     });
@@ -1888,12 +1889,15 @@ function buildResultHTML(result) {
     }
 
     if (result.input_image_url) {
-        resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
+        // resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
+        resultHTML += `<h3>Initial Image Used:</h3>
+               <p><a href="${result.input_image_url}" target="_blank">Click here to view initial image</a></p>`;
+
     }
     
 
     if (result.output_url) {
-        resultHTML += `<h3>Output:</h3><p><a href="${result.output_url}" target="_blank">Click here to view the output</a></p>`;
+        resultHTML += `<h3>Output:</h3><p><a href="${result.output_url}" target="_blank">Click here to view output</a></p>`;
     }
 
     return resultHTML;
@@ -2106,6 +2110,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 0);
     });
 
+    // Details Block functions
+
     document.getElementById("toggleMotionButton").addEventListener("click", function () {
         refreshTable();
     });
@@ -2129,8 +2135,127 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // const vibeInput = document.getElementById('vibeInput');
+    // const vibeDropdown = document.getElementById('vibeDropdown');
 
-    // Base URL for images stored on GitHub
+    // // Show dropdown on focus
+    // vibeInput.addEventListener('focus', () => {
+    //     vibeDropdown.style.display = 'block';
+    // });
+
+    // // Hide dropdown when input loses focus
+    // vibeInput.addEventListener('blur', () => {
+    //     // Add a slight delay to allow click selection before hiding
+    //     setTimeout(() => {
+    //         vibeDropdown.style.display = 'none';
+    //     }, 150);
+    // });
+
+    // // Always show all options regardless of input
+    // vibeInput.addEventListener('input', () => {
+    //     Array.from(vibeDropdown.options).forEach(option => {
+    //         option.style.display = 'block'; // Ensure all options remain visible
+    //     });
+    // });
+
+    // // Update input when selecting from dropdown
+    // vibeDropdown.addEventListener('change', () => {
+    //     vibeInput.value = vibeDropdown.value;
+    // });
+
+    // HANDLE DROPDOWN LOGIC FOR INPUT BOXES
+    const handleDropdown = (inputId, dropdownId, dropdownButtonId) => {
+        console.log("inputId: " + inputId)
+        // console.log("dropdownId: " + dropdownId)
+        // console.log("dropdownButtonId: " + dropdownButtonId)
+        const inputElement = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        const options = dropdown.querySelectorAll('li');
+        const dropdownButton = document.getElementById(dropdownButtonId);
+
+        // Function to show dropdown and highlight best match
+        const showDropdown = () => {
+            dropdown.style.display = 'block';
+            const inputValue = inputElement.value.toLowerCase();
+
+            let bestMatch = null;
+            let bestMatchIndex = -1;
+
+            options.forEach((option, index) => {
+                const optionValue = option.textContent.toLowerCase();
+                
+                if (optionValue.includes(inputValue)) {
+                    if (bestMatchIndex === -1 || optionValue.indexOf(inputValue) < bestMatch.indexOf(inputValue)) {
+                        bestMatch = optionValue;
+                        bestMatchIndex = index;
+                    }
+                }
+                
+            });
+
+            options.forEach((option, index) => {
+                if (option.textContent.toLowerCase() === bestMatch) {
+                    option.style.backgroundColor = '#e0e0e0'; // Highlight best match
+                    dropdown.scrollTop = options[bestMatchIndex].offsetTop - dropdown.offsetTop;
+                } else {
+                    option.style.backgroundColor = ''; // Remove highlight from others
+                }
+            });
+            
+            
+        };
+
+        // Show dropdown on input click
+        inputElement.addEventListener('focus', () => {
+            showDropdown();
+        });
+
+        // Show dropdown on typing and update matching
+        inputElement.addEventListener('input', () => {
+            showDropdown();
+        });
+
+        // Show dropdown when clicking the button
+        dropdownButton.addEventListener('click', () => {
+            if (dropdown.style.display === 'none') {
+                showDropdown();
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Select option from dropdown
+        dropdown.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                inputElement.value = e.target.textContent;
+                dropdown.style.display = 'none'; // Hide dropdown after selection
+                if (inputId === "colorInput"){
+                    updateColorPickerFromInput();
+                }
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!inputElement.contains(e.target) && !dropdown.contains(e.target) && !dropdownButton.contains(e.target)) {
+                dropdown.style.display = 'none'; // Hide dropdown when clicking outside
+            }
+        });
+    };
+
+    // Initialize dropdown for both vibeInput and imageryInput
+    handleDropdown('vibeInput', 'vibeDropdown', 'dropdownButton');
+    handleDropdown('imageryInput', 'imageryDropdown', 'imageryDropdownButton');
+    handleDropdown('textureInput', 'textureDropdown', 'textureDropdownButton');
+    handleDropdown('colorInput', 'colorDropdown', 'colorDropdownButton');
+
+
+
+
+
+
+
+    // FOR IMAGES LOCATIONS
     const baseURL = "https://raw.githubusercontent.com/Jiaxin-yyjx/SongAnalysis/refs/heads/main/images/";
 
     // Handle imagery selection
@@ -2213,10 +2338,13 @@ function playpauseControl(playPauseButton) {
 }
 
 function togglePlayPause() {
+    console.log("toggle")
     if (waveform.isPlaying()) {
+        console.log("playing -> pause it")
         playPauseButton.innerHTML = '▶';
         waveform.pause();
     } else {
+        console.log("paused -> play it")
         playPauseButton.innerHTML = '⏸';
         waveform.play();
     }
@@ -2282,6 +2410,8 @@ function processAudio() {
     tablemade = false;
     const fileInput = document.getElementById('audioFile');
     const play_button = document.getElementById("playPauseButton")
+    const play_start_button = document.getElementById("playStartButton");
+    const play_buttons_box = document.getElementById("playbuttons");
     // const slider = document.getElementById("slider")
     const loadingIndicator = document.getElementById("loadingIndicator");
     audioZoom(); // Function to set all the zooom stuff up
@@ -2289,6 +2419,8 @@ function processAudio() {
 
 
     play_button.style.display = "block";
+    play_start_button.style.display = "block";
+    play_buttons_box.style.display = "flex"
     loadingIndicator.style.display = "block";
 
     // const clearButton = document.getElementById('clearButton');
@@ -2336,8 +2468,17 @@ function processAudio() {
                     // Load the audio URL
                     waveform.load(audioUrl);
 
+
                     // console.log("New WaveSurfer instance created and audio loaded: ", audioUrl);
                 }
+
+                play_start_button.addEventListener('click', () => {
+                    if (waveform) {
+                        console.log("clicked")
+                        waveform.play(0); // Start playback from the beginning (time = 0)
+                        playPauseButton.innerHTML = '⏸';
+                    }
+                });
 
                 waveform.on('error', (error) => {
                     console.error('WaveSurfer Error: ', error);

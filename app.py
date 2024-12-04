@@ -11,6 +11,18 @@ from tasks import long_running_task, process_audio, generate_image_task
 from queue_config import queue, redis_conn
 from flask_cors import CORS
 from datetime import datetime
+import cloudinary
+import cloudinary.uploader
+
+CLOUDINARY_URL = 'cloudinary://851777568929886:GJN-qDx1C7idDTO4SZ92FuD3mI0@hqxlqewng'
+cloudinary.config(
+    # cloud_name=os.environ['CLOUDINARY_URL'].split('@')[1],
+    # api_key=os.environ['CLOUDINARY_URL'].split(':')[1][2:],
+    # api_secret=os.environ['CLOUDINARY_URL'].split(':')[2].split('@')[0],
+    cloud_name=CLOUDINARY_URL.split('@')[1],
+    api_key=CLOUDINARY_URL.split(':')[1][2:],
+    api_secret=CLOUDINARY_URL.split(':')[2].split('@')[0],
+)
 
 load_dotenv()
 app = Flask(__name__, template_folder='./templates', static_folder='./static')
@@ -32,43 +44,59 @@ def save_api_key():
     global api_key_storage
     try:
         data = request.get_json()
-        api_key = data.get('api_key')
-        
-        
+        api_key = data.get('api_key')        
 
         if not api_key:
             return jsonify({'message': 'API Key is missing!'}), 400
         
-        # Store the API key (you can replace this with database/file storage)
-        api_key_storage = api_key
-        print("API KEY: ", api_key_storage)
-        print("Stored in environ before: ", os.getenv("LAB_DISCO_API_KEY"))
-        os.environ["LAB_DISCO_API_KEY"] = api_key_storage
-        print("Stored in environ after: ", os.getenv("LAB_DISCO_API_KEY"))
-        redis_conn.set("api_key", api_key)
-        print("Stored in redis: ", redis_conn.get("api_key").decode('utf-8'))
+        if "disco" in api_key:
+            api_key = os.getenv("LAB_DISCO_API_KEY")
+            redis_conn.set("api_key", api_key)
+            print("DISCO KEYWORD: ", api_key)
+        else:
+            # Store the API key (you can replace this with database/file storage)
+            api_key_storage = api_key
+            print("API KEY: ", api_key_storage)
+            # print("Stored in environ before: ", os.getenv("LAB_DISCO_API_KEY"))
+            os.environ["LAB_DISCO_API_KEY"] = api_key_storage
+            print("Stored in environ after: ", os.getenv("LAB_DISCO_API_KEY"))
+            redis_conn.set("api_key", api_key)
+            print("Stored in redis: ", redis_conn.get("api_key").decode('utf-8'))
+
 
         return jsonify({'message': 'API Key saved successfully!'}), 200
     except Exception as e:
         return jsonify({'message': f'Error: {str(e)}'}), 500
 
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image file provided"}), 400
 
-motion_magnitudes = {
-    "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 10, "vstrong": 20},
-    "zoom_out": {"none": 1.00, "weak": -0.5, "normal": -1.04, "strong": -10, "vstrong": -20},
-    "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 3, "vstrong": 20},
-    "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
-    "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
-    "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
-    "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
-    "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
-    "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
-    "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
-    "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
-    "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
-    "pan_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
-    "pan_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20}
-}
+    file_to_upload = request.files['image']
+
+    # Upload the image to Cloudinary
+    result = cloudinary.uploader.upload(file_to_upload)
+
+    # Return the static URL
+    return jsonify({"url": result['secure_url']})
+
+# motion_magnitudes = {
+#     "zoom_in": {"none": 1.00, "weak": 1.02, "normal": 1.04, "strong": 10, "vstrong": 20},
+#     "zoom_out": {"none": 1.00, "weak": -0.5, "normal": -1.04, "strong": -10, "vstrong": -20},
+#     "rotate_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+#     "rotate_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+#     "rotate_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+#     "rotate_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+#     "rotate_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+#     "rotate_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+#     "spin_cw": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+#     "spin_ccw": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+#     "pan_up": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+#     "pan_down": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20},
+#     "pan_right": {"none": 0, "weak": 0.5, "normal": 1, "strong": 10, "vstrong": 20},
+#     "pan_left": {"none": 0, "weak": -0.5, "normal": -1, "strong": -10, "vstrong": -20}
+# }
 
 # API Route
 
@@ -735,6 +763,7 @@ def calculate_frames(scene_change_times, time_intervals, motion_data, total_song
             
 
             def get_motion_value(motion, strength):
+                print("for motion: ", motion, " and strength: ", strength, " motion value: ",motion_magnitudes.get(motion, {}).get(strength, strength))
                 return motion_magnitudes.get(motion, {}).get(strength, strength)
 
             motion_value = get_motion_value(motion, strength)

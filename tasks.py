@@ -194,7 +194,7 @@ def generate_image_task(data):
         #     }
         # )
         
-        output = replicate.run(
+        output = api.run(
             "black-forest-labs/flux-schnell",
             input={
                 "prompt": prompt,
@@ -204,7 +204,7 @@ def generate_image_task(data):
                 "aspect_ratio": "1:1",
                 "output_format": "webp",
                 "output_quality": 80,
-                "num_inference_steps": 10
+                "num_inference_steps": 4
             }
         )
         # Simulate a long-running process, like calling an API
@@ -262,6 +262,7 @@ def long_running_task(data):
 
         # Processing the data
         song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data = parse_input_data(form_data, transitions_data, song_len)
+        # song_duration, scene_change_times, transition_times, time_intervals, interval_strings, motion_data, og_motion_data= parse_input_data(form_data, transitions_data, song_len)
         final_anim_frames = [0]
         if round(song_len, 2) not in scene_change_times:
             scene_change_times.append(round(song_len, 2))
