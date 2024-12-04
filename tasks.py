@@ -194,7 +194,7 @@ def generate_image_task(data):
         #     }
         # )
         
-        output = replicate.run(
+        output = api.run(
             "black-forest-labs/flux-schnell",
             input={
                 "prompt": prompt,
@@ -204,7 +204,7 @@ def generate_image_task(data):
                 "aspect_ratio": "1:1",
                 "output_format": "webp",
                 "output_quality": 80,
-                "num_inference_steps": 10
+                "num_inference_steps": 4
             }
         )
         # Simulate a long-running process, like calling an API
