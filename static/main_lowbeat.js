@@ -118,7 +118,7 @@ async function sendApiKey() {
         const result = await response.json();
         document.getElementById("api_key").style.border = "1px solid black";
         // document.getElementById('response').innerText = result.message;
-        alert('API Key sent to backend!');
+        // alert('API Key sent to backend!');
     } catch (error) {
         console.log("no api key")
         // document.getElementById('response').innerText = 'Error: ' + error.message;
@@ -1889,12 +1889,15 @@ function buildResultHTML(result) {
     }
 
     if (result.input_image_url) {
-        resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
+        // resultHTML += `<h3>Initial Image Used:</h3><p><a href="${result.input_image_url}" target="_blank">${result.input_image_url}</a></p>`;
+        resultHTML += `<h3>Initial Image Used:</h3>
+               <p><a href="${result.input_image_url}" target="_blank">Click here to view initial image</a></p>`;
+
     }
     
 
     if (result.output_url) {
-        resultHTML += `<h3>Output:</h3><p><a href="${result.output_url}" target="_blank">Click here to view the output</a></p>`;
+        resultHTML += `<h3>Output:</h3><p><a href="${result.output_url}" target="_blank">Click here to view output</a></p>`;
     }
 
     return resultHTML;
