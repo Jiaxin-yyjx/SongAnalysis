@@ -16,12 +16,12 @@ import cloudinary.uploader
 
 CLOUDINARY_URL = 'cloudinary://851777568929886:GJN-qDx1C7idDTO4SZ92FuD3mI0@hqxlqewng'
 cloudinary.config(
-    cloud_name=os.environ['CLOUDINARY_URL'].split('@')[1],
-    api_key=os.environ['CLOUDINARY_URL'].split(':')[1][2:],
-    api_secret=os.environ['CLOUDINARY_URL'].split(':')[2].split('@')[0],
-    # cloud_name=CLOUDINARY_URL.split('@')[1],
-    # api_key=CLOUDINARY_URL.split(':')[1][2:],
-    # api_secret=CLOUDINARY_URL.split(':')[2].split('@')[0],
+    # cloud_name=os.environ['CLOUDINARY_URL'].split('@')[1],
+    # api_key=os.environ['CLOUDINARY_URL'].split(':')[1][2:],
+    # api_secret=os.environ['CLOUDINARY_URL'].split(':')[2].split('@')[0],
+    cloud_name=CLOUDINARY_URL.split('@')[1],
+    api_key=CLOUDINARY_URL.split(':')[1][2:],
+    api_secret=CLOUDINARY_URL.split(':')[2].split('@')[0],
 )
 
 load_dotenv()
@@ -587,7 +587,7 @@ def is_valid_strength_expression(expression):
 def parse_input_data(form_data, trans_data, song_duration):
     trans_data = {k: v for k, v in trans_data.items() if v.get('transition', True)}
     scene_change_times = sorted(list(map(float, form_data.keys())))
-    print("scene times and trans", scene_change_times, trans_data)
+    print("scene times and trans app.py", scene_change_times, trans_data)
     
     # Create the combined list of transition times
     transition_times = list(map(float, [time.split('-')[0] for time in trans_data.keys()] + 
